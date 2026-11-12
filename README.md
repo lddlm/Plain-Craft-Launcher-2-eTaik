@@ -3,9 +3,22 @@
 基于 **Plain Craft Launcher 2** 的第三方修改版 Minecraft 启动器（Windows / WPF / VB.NET）。
 当前版本 **3.0.0.0**。
 
-> 普通用户请直接到 **Releases → v3.0** 下载成品，不需要编译本仓库：
-> `Plain Craft Launcher 2 eTaik.exe` 与 `联机包.zip` 放在**同一个文件夹**里即可运行。
+> 普通用户请直接到 **Releases → v3.0** 下载成品，不需要编译本仓库。
+>
+> **推荐下载 `PCL-eTaik-3.0.zip`**，解压到任意文件夹即可运行，包内文件名已正确：
+>
+> | 包内文件 | 说明 |
+> |---|---|
+> | `Plain Craft Launcher 2 eTaik.exe` | 主程序（已签名，3.0.0.0） |
+> | `Plain Craft Launcher 2 eTaik.exe.config` | 运行时配置（程序集绑定重定向），**必须与 exe 同名同目录** |
+> | `联机包.zip` | 联机功能分体包，解压到 exe 同目录 |
+>
+> 若只需要更新联机组件，可单独下载 `PCL-eTaik-Online-Pack.zip`（内容即 `联机包.zip`）。
 > 本仓库存放的是完整源码，供查阅与自行构建。
+>
+> 提示：GitHub 会把 Release 附件名中的空格自动替换为 `.`，因此不建议直接把裸 exe
+> 作为独立附件——那样下载后名字会变成 `Plain.Craft.Launcher.2.eTaik.exe`，与
+> `.exe.config` 不再匹配。请使用上面的压缩包。
 
 ## 3.0 主要功能
 
