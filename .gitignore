@@ -1,0 +1,16 @@
+# 编译产物
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.pdb
+*.cache
+*.old
+*.bak
+*.tmp
+
+# 运行时生成的目录
+PCL/
+photo/
+*.log

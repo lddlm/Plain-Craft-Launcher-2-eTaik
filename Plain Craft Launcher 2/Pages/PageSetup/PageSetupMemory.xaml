@@ -1,0 +1,53 @@
+<local:MyPageRight
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d" x:Class="PageSetupMemory"
+    PanScroll="PanBack">
+    <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
+        <StackPanel x:Name="PanMain" Margin="25,10">
+
+            <!-- 手动优化：与百宝箱的内存优化同源 -->
+            <local:MyCard Margin="0,15" Title="内存优化">
+                <StackPanel Margin="25,40,25,20">
+                    <TextBlock Text="把各进程工作集中长期不用的部分归还给系统，腾出更多物理内存供游戏使用（不局限于 MC）。如果使用机械硬盘，优化后可能会有一小段时间的卡顿。"
+                               FontSize="13" TextWrapping="Wrap" Foreground="{StaticResource ColorBrushGray3}" />
+                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                        <local:MyButton x:Name="BtnMemoryNow" Text="立即优化" Height="34" Padding="18,0"
+                                        ColorType="Highlight" Margin="0,0,14,0" />
+                        <TextBlock x:Name="LabMemoryNow" FontSize="12" VerticalAlignment="Center"
+                                   Foreground="{StaticResource ColorBrushGray4}" />
+                    </StackPanel>
+                </StackPanel>
+            </local:MyCard>
+
+            <!-- 自动优化：达到阈值触发 -->
+            <local:MyCard Margin="0,0,0,15" Title="自动优化">
+                <StackPanel Margin="25,40,25,20">
+                    <local:MyCheckBox x:Name="CheckMemoryAuto" Height="22" local:SettingService.Key="MemoryAutoOptimize"
+                                      Text="当已用内存高于指定数值时，自动进行内存优化" />
+                    <StackPanel x:Name="PanMemoryAuto" Orientation="Horizontal" Margin="0,16,0,0">
+                        <TextBlock x:Name="LabMemoryThreshold" FontSize="14" VerticalAlignment="Center" Margin="0,0,16,0" />
+                        <local:MySlider x:Name="SliderMemoryThreshold" Width="300" VerticalAlignment="Center"
+                                        local:SettingService.Key="MemoryAutoThresholdGb" MaxValue="32" ValueByKey="1" />
+                    </StackPanel>
+                    <TextBlock x:Name="LabMemoryAutoNow" FontSize="12" VerticalAlignment="Center" Margin="0,12,0,0"
+                               Foreground="{StaticResource ColorBrushGray4}" />
+                    <TextBlock Text="每 15 秒检查一次系统内存；已用内存高于阈值后自动优化一次，触发一次后至少间隔 5 分钟才会再次优化，避免反复清理。"
+                               FontSize="13" TextWrapping="Wrap" Margin="0,12,0,0" Foreground="{StaticResource ColorBrushGray3}" />
+                </StackPanel>
+            </local:MyCard>
+
+            <!-- 启动游戏时优化 -->
+            <local:MyCard Margin="0,0,0,15" Title="启动游戏时">
+                <StackPanel Margin="25,40,25,20">
+                    <local:MyCheckBox x:Name="CheckMemoryLaunch" Height="22" local:SettingService.Key="LaunchArgumentRam"
+                                      Text="启动游戏前先进行一次内存优化" />
+                    <TextBlock Text="勾选后，启动 Minecraft 的流程中会加入「内存优化」步骤，为游戏腾出更多物理内存（版本设置里的单独开关可以覆盖此项）。"
+                               FontSize="13" TextWrapping="Wrap" Margin="0,10,0,0" Foreground="{StaticResource ColorBrushGray3}" />
+                </StackPanel>
+            </local:MyCard>
+
+        </StackPanel>
+    </local:MyScrollViewer>
+</local:MyPageRight>

@@ -1,0 +1,153 @@
+﻿<local:MyPageRight
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d" x:Class="PageToolRecord"
+    PanScroll="PanBack">
+    <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
+        <StackPanel x:Name="PanMain" Margin="25,25,25,10" Grid.IsSharedSizeScope="True">
+
+            <!-- 录制开关与状态 -->
+            <local:MyCard Title="录制" Margin="0,0,0,15">
+                <StackPanel Margin="25,40,25,25">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
+                            <ColumnDefinition Width="1*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="28" />
+                            <RowDefinition Height="6" />
+                            <RowDefinition Height="28" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="录制状态" Margin="0,0,25,0" />
+                        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Ellipse x:Name="ShapeState" Width="8" Height="8" Margin="0,0,8,0" VerticalAlignment="Center"
+                                     Fill="{DynamicResource ColorBrushGray4}" />
+                            <TextBlock x:Name="LabState" Text="未在录制" VerticalAlignment="Center" />
+                            <TextBlock x:Name="LabElapsed" Text="" VerticalAlignment="Center" Margin="8,0,0,0"
+                                       Foreground="{StaticResource ColorBrushGray3}" />
+                        </StackPanel>
+                        <TextBlock Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="保存位置" Margin="0,0,25,0" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="LabFolder" VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis" Foreground="{StaticResource ColorBrushGray3}" />
+                    </Grid>
+                    <TextBlock x:Name="LabFile" Text="" Margin="0,8,0,0" FontSize="12.5"
+                               TextTrimming="CharacterEllipsis" Foreground="{StaticResource ColorBrushGray3}"
+                               Visibility="Collapsed" />
+                    <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
+                        <local:MyButton x:Name="BtnRecord" Text="开始录制" Height="34" Width="132" ColorType="Highlight" />
+                        <local:MyButton x:Name="BtnOpenFolder" Text="打开 video 文件夹" Height="34" Padding="15,0" Margin="10,0,0,0" />
+                    </StackPanel>
+                    <TextBlock x:Name="LabHotkeyTip" Text="游戏内按 Alt + Q 可以随时开始或结束录制，不会打断游戏操作。"
+                               Margin="0,13,0,0" FontSize="12.5" LineHeight="18" TextWrapping="Wrap"
+                               Foreground="{StaticResource ColorBrushGray3}" />
+                </StackPanel>
+            </local:MyCard>
+
+            <!-- 录制参数 -->
+            <local:MyCard Title="录制设置" Margin="0,0,0,15">
+                <StackPanel Margin="25,40,25,25">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
+                            <ColumnDefinition Width="1*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="28" />
+                            <RowDefinition Height="9" />
+                            <RowDefinition Height="28" />
+                            <RowDefinition Height="9" />
+                            <RowDefinition Height="28" />
+                            <RowDefinition Height="9" />
+                            <RowDefinition Height="28" />
+                            <RowDefinition Height="9" />
+                            <RowDefinition Height="28" />
+                            <RowDefinition Height="14" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="6" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="录制范围" Margin="0,0,25,0" />
+                        <Grid Grid.Row="0" Grid.Column="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <local:MyRadioBox local:SettingService.Key="VideoMode" local:SettingService.Value="0"
+                                              x:Name="RadioFullScreen" Text="全屏" Height="22" VerticalAlignment="Center"
+                                              ToolTip="录制整个主屏幕，游戏全屏或窗口化都不影响。" />
+                            <local:MyRadioBox local:SettingService.Key="VideoMode" local:SettingService.Value="1"
+                                              x:Name="RadioGameWindow" Grid.Column="1" Text="锁定游戏窗口" Height="22"
+                                              Margin="36,0,0,0" VerticalAlignment="Center"
+                                              ToolTip="只录游戏的画面区域，不含桌面上的其他窗口。&#xa;窗口移动后需要重新开始录制才会重新定位。" />
+                        </Grid>
+
+                        <TextBlock Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="分辨率" Margin="0,0,25,0" />
+                        <local:MyComboBox local:SettingService.Key="VideoHeight" x:Name="ComboHeight"
+                                          Grid.Row="2" Grid.Column="1" ToolTip="输出视频的高度，宽度按画面比例自动计算。&#xa;选得比屏幕高时会放大输出（比如 1080p 屏幕录 4K），更吃性能。">
+                            <local:MyComboBoxItem Content="跟随原画" local:SettingService.Value="0" />
+                            <local:MyComboBoxItem Content="2160p（4K）" local:SettingService.Value="2160" />
+                            <local:MyComboBoxItem Content="1440p（2K）" local:SettingService.Value="1440" />
+                            <local:MyComboBoxItem Content="1080p（推荐）" local:SettingService.Value="1080" />
+                            <local:MyComboBoxItem Content="720p" local:SettingService.Value="720" />
+                        </local:MyComboBox>
+
+                        <TextBlock Grid.Row="4" VerticalAlignment="Center" HorizontalAlignment="Left" Text="刷新率" Margin="0,0,25,0" />
+                        <local:MyComboBox local:SettingService.Key="VideoFps" x:Name="ComboFps"
+                                          Grid.Row="4" Grid.Column="1" ToolTip="录制帧率。越高越流畅，文件也越大。&#xa;游戏本身只有 60 帧时，录 120 帧不会有额外流畅度。">
+                            <local:MyComboBoxItem Content="30 FPS" local:SettingService.Value="30" />
+                            <local:MyComboBoxItem Content="60 FPS（推荐）" local:SettingService.Value="60" />
+                            <local:MyComboBoxItem Content="120 FPS" local:SettingService.Value="120" />
+                            <local:MyComboBoxItem Content="144 FPS" local:SettingService.Value="144" />
+                        </local:MyComboBox>
+
+                        <TextBlock Grid.Row="6" VerticalAlignment="Center" HorizontalAlignment="Left" Text="码率" Margin="0,0,25,0" />
+                        <local:MyComboBox local:SettingService.Key="VideoBitrate" x:Name="ComboBitrate"
+                                          Grid.Row="6" Grid.Column="1" ToolTip="画面质量与文件大小的平衡。&#xa;1080p 60 FPS 用 12 Mbps 已经很清晰；2K / 4K 建议 20 Mbps 以上。">
+                            <local:MyComboBoxItem Content="6 Mbps（体积小）" local:SettingService.Value="6" />
+                            <local:MyComboBoxItem Content="12 Mbps（推荐）" local:SettingService.Value="12" />
+                            <local:MyComboBoxItem Content="20 Mbps（高清）" local:SettingService.Value="20" />
+                            <local:MyComboBoxItem Content="40 Mbps（2K / 4K）" local:SettingService.Value="40" />
+                            <local:MyComboBoxItem Content="80 Mbps（几乎无损）" local:SettingService.Value="80" />
+                        </local:MyComboBox>
+
+                        <TextBlock Grid.Row="8" VerticalAlignment="Center" HorizontalAlignment="Left" Text="编码格式" Margin="0,0,25,0" />
+                        <local:MyComboBox local:SettingService.Key="VideoCodec" x:Name="ComboCodec"
+                                          Grid.Row="8" Grid.Column="1" ToolTip="H.264 兼容性最好，什么播放器都能放。&#xa;H.265 同画质体积更小，但更吃 CPU，部分播放器需要额外装解码器。">
+                            <local:MyComboBoxItem Content="H.264（兼容性最好）" local:SettingService.Value="0" />
+                            <local:MyComboBoxItem Content="H.265 / HEVC（体积更小）" local:SettingService.Value="1" />
+                        </local:MyComboBox>
+
+                        <local:MyCheckBox local:SettingService.Key="VideoAutoRecord" x:Name="CheckAutoRecord"
+                                          Grid.Row="10" Grid.ColumnSpan="2" Text="启动游戏时自动开始录制" Height="22" Margin="0,6,0,0"
+                                          ToolTip="游戏窗口出现后约 2 秒自动开始，退出游戏时自动结束。" />
+                        <local:MyCheckBox local:SettingService.Key="VideoAudio" x:Name="CheckAudio"
+                                          Grid.Row="12" Grid.ColumnSpan="2" Text="同时录制系统声音" Height="22"
+                                          ToolTip="抓取默认播放设备正在输出的声音（游戏音效、背景音乐、语音），不会录麦克风。&#xa;没有可用播放设备或格式不支持时自动只录画面，不会让录制失败。" />
+                    </Grid>
+                </StackPanel>
+            </local:MyCard>
+
+            <!-- 录制内核 -->
+            <local:MyCard Title="录制内核" Margin="0,0,0,15">
+                <StackPanel Margin="25,40,25,25">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
+                            <ColumnDefinition Width="1*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="状态" Margin="0,0,25,0" />
+                        <TextBlock x:Name="LabKernel" Grid.Column="1" VerticalAlignment="Center" TextWrapping="Wrap"
+                                   Text="正在检测……" Foreground="{StaticResource ColorBrushGray3}" />
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                        <local:MyButton x:Name="BtnDetect" Text="重新检测" Height="30" Padding="14,0" />
+                    </StackPanel>
+                </StackPanel>
+            </local:MyCard>
+
+        </StackPanel>
+    </local:MyScrollViewer>
+</local:MyPageRight>

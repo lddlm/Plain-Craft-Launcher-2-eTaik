@@ -1,0 +1,12 @@
+* text=auto
+*.vb text eol=crlf
+*.xaml text eol=crlf
+*.vbproj text eol=crlf
+*.md text eol=lf
+*.png binary
+*.jpg binary
+*.ico binary
+*.ttf binary
+*.dll binary
+*.zip binary
+*.jar binary
