@@ -41,16 +41,16 @@
 
 <table>
 <tr>
-<td width="50%"><img src="docs/images/03-download.png" width="100%" alt="下载页"></td>
-<td width="50%"><img src="docs/images/04-toolbox.png" width="100%" alt="工具箱"></td>
+<td width="50%"><img src="docs/images/03-download.png" width="420" alt="下载页"></td>
+<td width="50%"><img src="docs/images/04-toolbox.png" width="420" alt="工具箱"></td>
 </tr>
 <tr>
 <td align="center"><sub>下载：原版 / 整合包 / Mod / 数据包 / 资源包 / 光影 / Java</sub></td>
 <td align="center"><sub>工具箱：录屏（含系统声音，可选 4K 60FPS）/ 截屏</sub></td>
 </tr>
 <tr>
-<td width="50%"><img src="docs/images/05-settings.png" width="100%" alt="设置"></td>
-<td width="50%"><img src="docs/images/02-mod-manager.png" width="100%" alt="Mod 管理"></td>
+<td width="50%"><img src="docs/images/05-settings.png" width="420" alt="设置"></td>
+<td width="50%"><img src="docs/images/02-mod-manager.png" width="420" alt="Mod 管理"></td>
 </tr>
 <tr>
 <td align="center"><sub>设置：启动选项、内存分配（按 GB 语义）、动画与个性化</sub></td>
