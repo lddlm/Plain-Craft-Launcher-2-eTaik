@@ -31,12 +31,46 @@
 - 内存优化：按「已用内存高于 N GB」触发，回收全进程工作集
 - 品牌与视觉：蓝色六边形图标、启动画面、贴边提示条
 
+## 界面预览
+
+<p align="center">
+  <img src="docs/images/01-launch.png" width="820" alt="PCL eTaik 启动页">
+</p>
+
+<p align="center"><sub>启动页：正版 / 离线切换、头像是当前皮肤、「自定义信息」显示在游戏窗口标题栏</sub></p>
+
+<table>
+<tr>
+<td width="50%"><img src="docs/images/03-download.png" width="100%" alt="下载页"></td>
+<td width="50%"><img src="docs/images/04-toolbox.png" width="100%" alt="工具箱"></td>
+</tr>
+<tr>
+<td align="center"><sub>下载：原版 / 整合包 / Mod / 数据包 / 资源包 / 光影 / Java</sub></td>
+<td align="center"><sub>工具箱：录屏（含系统声音，可选 4K 60FPS）/ 截屏</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/images/05-settings.png" width="100%" alt="设置"></td>
+<td width="50%"><img src="docs/images/02-mod-manager.png" width="100%" alt="Mod 管理"></td>
+</tr>
+<tr>
+<td align="center"><sub>设置：启动选项、内存分配（按 GB 语义）、动画与个性化</sub></td>
+<td align="center"><sub>版本设置 · Mod 管理：一键补全前置、兼容性检测、启用/禁用与更新</sub></td>
+</tr>
+</table>
+
+<p align="center">
+  <img src="docs/images/06-toast.png" width="300" alt="录屏提示条">
+</p>
+
+<p align="center"><sub>录屏 / 截屏状态提示条：从屏幕边缘滑出，贴边不遮挡画面，不打断游戏操作</sub></p>
+
 ## 仓库结构
 
 | 路径 | 内容 |
 |---|---|
 | `Plain Craft Launcher 2\` | 完整 VB.NET / WPF 工程（`.vbproj`、`.vb`、`.xaml`、`Images\`、`Resources\`） |
 | `LICENCE.txt` | 上游《PCL 分发有限许可》与《PCL 存储库合理使用指南》全文 |
+| `docs/images/` | 上图中的界面截图（README 预览用） |
 | `BUILD.md` | 构建环境与方法 |
 | `MANIFEST.txt` | 源码文件清单与 sha256，便于核对完整性 |
 

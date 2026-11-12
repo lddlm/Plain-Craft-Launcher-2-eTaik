@@ -286,6 +286,12 @@ Plain Craft Launcher 2/Resources/transformer.jar | 2243 | ea5756fec2e06d5aa5824b
 Plain Craft Launcher 2/WindowVideoToast.xaml | 2588 | 52e8b96bc0c3f4b1ad100dca424aa1f8f5de0c38c20a8fc654f55f00bd3cae4a
 Plain Craft Launcher 2/WindowVideoToast.xaml.vb | 7059 | 3095631859e65dceedfab044423d1adeda5f447c94ae0ab3064493101ebd3559
 Plain Craft Launcher 2/app.manifest | 3409 | 7d96ee4481b9f8a87ec086ac1347357b5c2103fc8ce81cc709e01d9cc2c45240
-README.md | 3775 | bffd7f7cde68202c0a38cf3e079a4fb60d276de24d674fab4f00628f4ab31ef2
+README.md | 5214 | 13546cfd457e181ffe7f873da59ed02d6ebeb98d9cc50bf8a38a9975640d1a83
+docs/images/01-launch.png | 92945 | d6e5ccca867fe7df41909f40e9d4dc1f6a23d63829e8ff549d263c5a92201b35
+docs/images/02-mod-manager.png | 186402 | 7ad9fc46b4977b49b5ce594d08c0ab70200614a1c47acd1b239a53865326d523
+docs/images/03-download.png | 116906 | 66947f85f3f75f2efacf94d58e69e90ee02e2e2af099be90266a72c66bf20eca
+docs/images/04-toolbox.png | 123201 | f38622936fe62d789f8881beae151c3639608128a4643e8a4c0f2189d8cc10d6
+docs/images/05-settings.png | 126523 | a2bb9c6370f8c299f10d54105a7bab207ef76463cd3e6dc520f3f0b7861dd9a1
+docs/images/06-toast.png | 2909 | 57180cf2f0e1c860c50b378dd93e711df809df55bb08019e0d59dc02d83804c9
 
-# 共 286 个文件，6923754 字节（6.60 MB）
+# 共 292 个文件，7574079 字节（7.22 MB）
