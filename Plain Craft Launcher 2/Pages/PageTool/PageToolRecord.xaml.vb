@@ -18,14 +18,27 @@ Public Class PageToolRecord
         If Not Reloaded Then
             Reloaded = True
             AniControlEnabled += 1
-            Reload()
-            AniControlEnabled -= 1
+            Try
+                Reload()
+            Finally
+                AniControlEnabled -= 1
+            End Try
             AddHandler UltraVideo.StatusChanged, AddressOf OnVideoStatusChanged
             AddHandler ComboHeight.SelectionChanged, AddressOf OnSpecChanged
             AddHandler ComboFps.SelectionChanged, AddressOf OnSpecChanged
             AddHandler ComboCodec.SelectionChanged, AddressOf OnSpecChanged
+        Else
+            '每次回到这个页面都以设置文件为准，免得界面显示的和实际用的不一致
+            AniControlEnabled += 1
+            Try
+                SettingService.RefreshSettings(Me)
+            Finally
+                AniControlEnabled -= 1
+            End Try
         End If
-        LabHotkeyTip.Text = $"游戏内按 {UltraVideo.HotkeyText} 可以随时开始或结束录制，不会打断游戏操作。按 {UltraScreenshot.HotkeyText} 可以截屏。"
+        LabHotkeyTip.Text = $"游戏内按 {UltraVideo.HotkeyText} 可以随时开始或结束录制（按当前录制范围），按 {UltraVideo.RegionHotkeyText} 可以直接框选一块区域录制，按 {UltraScreenshot.HotkeyText} 可以截屏，都不会打断游戏操作。"
+        RefreshResolutionRow()
+        RefreshRange()
         RefreshStatus()
         StatusTimer.Start()
     End Sub
@@ -87,6 +100,8 @@ Public Class PageToolRecord
     ''' <summary>问一遍编码器：当前分辨率能跑哪些帧率、当前帧率能跑哪些分辨率，跑不了的就置灰。</summary>
     Private Sub RefreshSpecLimits()
         If SpecProbing OrElse ApplyingLimits Then Return
+        '区域录制按原尺寸输出，分辨率这一行是隐藏的，没必要去问编码器
+        If RadioRegion.Checked Then Return
         SpecProbing = True
         Dim Codec As Integer = ComboValue(ComboCodec, 0)
         Dim CurH As Integer = ComboValue(ComboHeight, 1080)
@@ -230,6 +245,52 @@ Public Class PageToolRecord
         End If
         RefreshStatus()
     End Sub
+
+    '==== 录制范围 = 区域 ====
+
+    Private Sub RadioRegion_Changed(sender As Object, e As RouteEventArgs) Handles RadioRegion.Changed
+        RefreshResolutionRow()
+        RefreshRange()
+        If Not RadioRegion.Checked Then RefreshSpecLimits()
+    End Sub
+
+    Private Sub RadioFullScreen_Changed(sender As Object, e As RouteEventArgs) Handles RadioFullScreen.Changed
+        RefreshRange()
+    End Sub
+
+    Private Sub RadioGameWindow_Changed(sender As Object, e As RouteEventArgs) Handles RadioGameWindow.Changed
+        RefreshRange()
+    End Sub
+
+    ''' <summary>
+    ''' 把「这次录制会按什么范围录」直接写在界面上。
+    ''' 读的是设置值而不是单选框状态——界面可能因为保存失败和实际不一致，这样一眼能看出来。
+    ''' </summary>
+    Private Sub RefreshRange()
+        Dim Text As String
+        Select Case Settings.Get(Of Integer)("VideoMode")
+            Case UltraVideo.VideoModeGameWindow
+                Text = "录制范围：锁定游戏窗口"
+            Case UltraVideo.VideoModeRegion
+                Text = "录制范围：区域（每次开始录制时框选一次）"
+            Case Else
+                Text = "录制范围：全屏"
+        End Select
+        If LabRange.Text <> Text Then
+            LabRange.Text = Text
+            Logger.Info("[VideoMode] " & Text)
+        End If
+    End Sub
+
+    ''' <summary>区域录制按框选原尺寸输出，分辨率那一行直接收起来，免得看起来像能调。</summary>
+    Private Sub RefreshResolutionRow()
+        Dim IsRegion As Boolean = RadioRegion.Checked
+        RowHeight.Height = New GridLength(If(IsRegion, 0, 28))
+        RowHeightGap.Height = New GridLength(If(IsRegion, 0, 9))
+        LabHeightLabel.Visibility = If(IsRegion, Visibility.Collapsed, Visibility.Visible)
+        ComboHeight.Visibility = LabHeightLabel.Visibility
+    End Sub
+
 
     Private Sub BtnOpenFolder_Click() Handles BtnOpenFolder.Click
         Try

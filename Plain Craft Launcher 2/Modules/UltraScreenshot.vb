@@ -14,6 +14,8 @@ Imports System.Windows.Threading
 Public Module UltraScreenshot
 
     Private Const HotkeyId As Integer = &H5057
+    '区域截屏热键（默认 Alt + 2，可在设置里改）
+    Private Const RegionHotkeyId As Integer = &H5059
     Private Const MOD_ALT As Integer = 1
     Private Const MOD_CONTROL As Integer = 2
     Private Const MOD_SHIFT As Integer = 4
@@ -23,10 +25,22 @@ Public Module UltraScreenshot
     ''' <summary>默认快捷键。</summary>
     Public Const DefaultHotkey As String = "Alt+W"
 
+    ''' <summary>截屏范围：全屏。</summary>
+    Public Const ScreenshotModeFullScreen As Integer = 0
+    ''' <summary>截屏范围：锁定游戏窗口。</summary>
+    Public Const ScreenshotModeGameWindow As Integer = 1
+    ''' <summary>截屏范围：自定义区域（每次截屏时框选）。</summary>
+    Public Const ScreenshotModeRegion As Integer = 2
+
     Private HotkeyHwnd As IntPtr = IntPtr.Zero
     Private HotkeyMods As Integer = MOD_ALT
     Private HotkeyVK As Integer = &H57
     Private HotkeyIsRegistered As Boolean = False
+    '区域截屏热键（默认 Alt + 2）
+    Private RegionHotkeyMods As Integer = MOD_ALT
+    Private RegionHotkeyVK As Integer = &H32
+    Private RegionHotkeyIsRegistered As Boolean = False
+    Private RegionHotkeyHeld As Boolean = False
     Private KeyboardHookHandle As IntPtr = IntPtr.Zero
     Private KeyboardHookCallback As Native.LowLevelKeyboardProc
     Private HotkeyHeld As Boolean = False
@@ -74,8 +88,16 @@ Public Module UltraScreenshot
     Public Function RegisterHotkey(Hwnd As IntPtr) As Boolean
         If Hwnd = IntPtr.Zero Then Return False
         HotkeyHwnd = Hwnd
+        'ApplyHotkey 里会顺带把区域截屏热键一起注册好
         Return ApplyHotkey()
     End Function
+
+    ''' <summary>区域截屏快捷键的显示文本，例如「Alt + 2」。</summary>
+    Public ReadOnly Property RegionHotkeyText As String
+        Get
+            Return UltraVideo.FormatHotkey(RegionHotkeyMods, RegionHotkeyVK)
+        End Get
+    End Property
 
     ''' <summary>按设置重新注册快捷键。</summary>
     Public Function ApplyHotkey() As Boolean
@@ -85,21 +107,61 @@ Public Module UltraScreenshot
         HotkeyVK = &H57
         UltraVideo.ParseHotkey(Spec, HotkeyMods, HotkeyVK)
         If HotkeyHwnd = IntPtr.Zero Then Return False
+        '先把区域截屏那个摘掉：主热键可能刚被改成和它一样
+        Try
+            Native.UnregisterHotKey(HotkeyHwnd, RegionHotkeyId)
+        Catch
+        End Try
+        RegionHotkeyIsRegistered = False
         Try
             Native.UnregisterHotKey(HotkeyHwnd, HotkeyId)
         Catch
         End Try
         HotkeyIsRegistered = False
+        Dim Ok As Boolean
         Try
             If Native.RegisterHotKey(HotkeyHwnd, HotkeyId, HotkeyMods, HotkeyVK) Then
                 HotkeyIsRegistered = True
+                Ok = True
                 Logger.Info($"已注册截屏热键：{HotkeyText}")
-                Return True
+            Else
+                Logger.Warn($"注册截屏热键 {HotkeyText} 失败（错误码 {Marshal.GetLastWin32Error()}），改用键盘钩子监听")
+                Ok = InstallKeyboardHook()
             End If
-            Logger.Warn($"注册截屏热键 {HotkeyText} 失败（错误码 {Marshal.GetLastWin32Error()}），改用键盘钩子监听")
-            Return InstallKeyboardHook()
         Catch ex As Exception
             Logger.Error(ex, "注册截屏热键失败")
+            Ok = False
+        End Try
+        '主热键落定后，再把区域截屏热键补回来（撞车的话它自己会跳过）
+        ApplyRegionHotkey()
+        Return Ok
+    End Function
+
+    ''' <summary>
+    ''' 注册区域截屏热键（默认 Alt + 2）。注册失败不抛异常，交给键盘钩子兜底。
+    ''' </summary>
+    Public Function ApplyRegionHotkey() As Boolean
+        UltraVideo.ParseHotkey(Settings.Get(Of String)("ScreenshotRegionHotkey"), RegionHotkeyMods, RegionHotkeyVK)
+        If HotkeyHwnd = IntPtr.Zero Then Return False
+        Try
+            Native.UnregisterHotKey(HotkeyHwnd, RegionHotkeyId)
+        Catch
+        End Try
+        RegionHotkeyIsRegistered = False
+        If RegionHotkeyMods = HotkeyMods AndAlso RegionHotkeyVK = HotkeyVK Then
+            Logger.Warn($"区域截屏快捷键 {RegionHotkeyText} 与截屏快捷键重复，已跳过注册")
+            Return False
+        End If
+        Try
+            If Native.RegisterHotKey(HotkeyHwnd, RegionHotkeyId, RegionHotkeyMods, RegionHotkeyVK) Then
+                RegionHotkeyIsRegistered = True
+                Logger.Info($"已注册区域截屏热键：{RegionHotkeyText}")
+                Return True
+            End If
+            Logger.Warn($"注册区域截屏热键 {RegionHotkeyText} 失败（错误码 {Marshal.GetLastWin32Error()}），由键盘钩子兜底")
+            Return False
+        Catch ex As Exception
+            Logger.Error(ex, "注册区域截屏热键失败")
             Return False
         End Try
     End Function
@@ -151,10 +213,16 @@ Public Module UltraScreenshot
                             HotkeyHeld = True
                             TakeScreenshot()
                         End If
+                    ElseIf Info.vkCode = RegionHotkeyVK AndAlso HookMods = RegionHotkeyMods AndAlso Not RegionHotkeyIsRegistered Then
+                        If Not RegionHotkeyHeld Then
+                            RegionHotkeyHeld = True
+                            TakeRegionScreenshot()
+                        End If
                     End If
                 ElseIf Message = &H101 OrElse Message = &H105 Then
                     UpdateHookMods(Info.vkCode, False)
                     If Info.vkCode = HotkeyVK Then HotkeyHeld = False
+                    If Info.vkCode = RegionHotkeyVK Then RegionHotkeyHeld = False
                 End If
             End If
         Catch ex As Exception
@@ -165,26 +233,50 @@ Public Module UltraScreenshot
 
     ''' <summary>主窗口收到 WM_HOTKEY 时调用。返回是否吃掉了该消息。</summary>
     Public Function OnHotkey(WParam As IntPtr) As Boolean
-        If WParam.ToInt32() <> HotkeyId Then Return False
-        TakeScreenshot()
-        Return True
+        Dim Id As Integer = WParam.ToInt32()
+        If Id = HotkeyId Then
+            TakeScreenshot()
+            Return True
+        End If
+        If Id = RegionHotkeyId Then
+            TakeRegionScreenshot()
+            Return True
+        End If
+        Return False
     End Function
 
 #End Region
 
 #Region "截屏"
 
-    ''' <summary>截一张图（热键、页面按钮共用）。</summary>
-    Public Sub TakeScreenshot()
-        Dispatch(Sub() TakeScreenshotInternal())
+    ''' <summary>Alt + 2：先弹出框选浮层，再按框出的区域截屏（不分「截屏范围」设置）。</summary>
+    Public Sub TakeRegionScreenshot()
+        Dispatch(
+        Sub()
+            If Busy Then Return
+            Dim Area As UltraVideo.GameArea? = WindowRegionSelect.Pick("截屏")
+            If Not Area.HasValue Then Return
+            TakeScreenshotInternal(Area)
+        End Sub)
     End Sub
 
-    Private Sub TakeScreenshotInternal()
+    ''' <summary>截一张图（热键、页面按钮共用）。</summary>
+    ''' <param name="Region">指定截取区域；传 Nothing 时按设置决定全屏还是锁定游戏窗口。</param>
+    Public Sub TakeScreenshot(Optional Region As UltraVideo.GameArea? = Nothing)
+        Dispatch(Sub() TakeScreenshotInternal(Region))
+    End Sub
+
+    Private Sub TakeScreenshotInternal(Region As UltraVideo.GameArea?)
         If Busy Then Return
+        Dim Mode As Integer = Settings.Get(Of Integer)("ScreenshotMode")
+        '「截屏范围 = 区域」时，每次截屏都先框一次
+        If Not Region.HasValue AndAlso Mode = ScreenshotModeRegion Then
+            Region = WindowRegionSelect.Pick("截屏")
+            If Not Region.HasValue Then Return
+        End If
         Busy = True
         Try
             '设置与窗口位置都在界面线程读，免得后台线程和设置文件、UI 打架
-            Dim Mode As Integer = Settings.Get(Of Integer)("ScreenshotMode")
             Dim TargetH As Integer = Settings.Get(Of Integer)("ScreenshotHeight")
             Dim Fmt As Integer = Settings.Get(Of Integer)("ScreenshotFormat")
             Dim WithCursor As Boolean = Settings.Get(Of Boolean)("ScreenshotCursor")
@@ -193,7 +285,14 @@ Public Module UltraScreenshot
             Dim X As Integer = 0, Y As Integer = 0
             Dim W As Integer = UltraVideo.ScreenWidth, H As Integer = UltraVideo.ScreenHeight
             Dim Target As IntPtr = IntPtr.Zero
-            If Mode = 1 Then
+            If Region.HasValue Then
+                '区域截屏：用框选浮层给的位置，按原尺寸输出，不再判断全屏 / 游戏窗口
+                X = Region.Value.X
+                Y = Region.Value.Y
+                W = Region.Value.Width
+                H = Region.Value.Height
+                TargetH = 0
+            ElseIf Mode = 1 Then
                 Target = UltraVideo.GetGameWindow()
                 Dim Area As UltraVideo.GameArea? = Nothing
                 If Target <> IntPtr.Zero Then Area = UltraVideo.GetWindowArea(Target)

@@ -7,7 +7,7 @@
     <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
         <StackPanel x:Name="PanMain" Margin="25,25,25,10" Grid.IsSharedSizeScope="True">
 
-            <local:MyCard Title="快捷键" Margin="0,0,0,15">
+            <local:MyCard Title="快捷键">
                 <StackPanel Margin="25,40,25,25">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -18,7 +18,12 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="14" />
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="14" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="14" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
+
                         <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="录制开关" Margin="0,0,25,0" />
                         <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                             <Border Background="{DynamicResource ColorBrushGray8}" CornerRadius="4" Padding="13,6" MinWidth="132">
@@ -27,25 +32,37 @@
                             <local:MyButton x:Name="BtnChange" Text="修改" Height="30" Padding="16,0" Margin="12,0,0,0" />
                             <local:MyButton x:Name="BtnReset" Text="恢复默认" Height="30" Padding="16,0" Margin="10,0,0,0" />
                         </StackPanel>
-                        <TextBlock Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="截屏" Margin="0,0,25,0" />
+
+                        <TextBlock Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="区域录制" Margin="0,0,25,0" />
                         <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Background="{DynamicResource ColorBrushGray8}" CornerRadius="4" Padding="13,6" MinWidth="132">
+                                <TextBlock x:Name="LabRegionHotkey" Text="Alt + 1" FontSize="14" HorizontalAlignment="Center" />
+                            </Border>
+                            <local:MyButton x:Name="BtnRegionChange" Text="修改" Height="30" Padding="16,0" Margin="12,0,0,0" />
+                            <local:MyButton x:Name="BtnRegionReset" Text="恢复默认" Height="30" Padding="16,0" Margin="10,0,0,0" />
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="4" VerticalAlignment="Center" HorizontalAlignment="Left" Text="截屏" Margin="0,0,25,0" />
+                        <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                             <Border Background="{DynamicResource ColorBrushGray8}" CornerRadius="4" Padding="13,6" MinWidth="132">
                                 <TextBlock x:Name="LabShotHotkey" Text="Alt + W" FontSize="14" HorizontalAlignment="Center" />
                             </Border>
-                            <TextBlock Text="固定快捷键，游戏运行时也能直接截屏" VerticalAlignment="Center" Margin="12,0,0,0"
-                                       FontSize="12.5" Foreground="{StaticResource ColorBrushGray3}" />
+                            <local:MyButton x:Name="BtnShotChange" Text="修改" Height="30" Padding="16,0" Margin="12,0,0,0" />
+                            <local:MyButton x:Name="BtnShotReset" Text="恢复默认" Height="30" Padding="16,0" Margin="10,0,0,0" />
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="6" VerticalAlignment="Center" HorizontalAlignment="Left" Text="区域截屏" Margin="0,0,25,0" />
+                        <StackPanel Grid.Row="6" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Background="{DynamicResource ColorBrushGray8}" CornerRadius="4" Padding="13,6" MinWidth="132">
+                                <TextBlock x:Name="LabShotRegionHotkey" Text="Alt + 2" FontSize="14" HorizontalAlignment="Center" />
+                            </Border>
+                            <local:MyButton x:Name="BtnShotRegionChange" Text="修改" Height="30" Padding="16,0" Margin="12,0,0,0" />
+                            <local:MyButton x:Name="BtnShotRegionReset" Text="恢复默认" Height="30" Padding="16,0" Margin="10,0,0,0" />
                         </StackPanel>
                     </Grid>
                     <TextBlock x:Name="LabTip" Margin="0,16,0,0" FontSize="12.5" LineHeight="19" TextWrapping="Wrap"
                                Foreground="{StaticResource ColorBrushGray3}"
-                               Text="点「修改」后按下新的组合键，至少要带一个 Alt / Ctrl / Shift。&#xa;录制快捷键是全局的，游戏运行时也能直接开始或结束录制。截屏固定为 Alt + W，图片保存在 PCL 目录下的 photo 文件夹。" />
-                </StackPanel>
-            </local:MyCard>
-
-            <local:MyCard Title="说明">
-                <StackPanel Margin="25,40,25,25">
-                    <TextBlock FontSize="12.5" LineHeight="21" TextWrapping="Wrap" Foreground="{StaticResource ColorBrushGray3}"
-                               Text="· 如果组合键被别的软件占用，录制和截屏依然可用，只是改由 PCL 直接监听键盘。&#xa;· 用的是 Alt 组合键时，按下的瞬间可能会让游戏窗口短暂失去焦点，这是 Windows 的机制。&#xa;· 想换回来，点「恢复默认」即可回到 Alt + Q；截屏固定为 Alt + W。" />
+                               Text="点「修改」后按下新的组合键，至少要带一个 Alt / Ctrl / Shift。&#xa;「录制开关」「截屏」按当前选中的录制范围 / 截屏范围执行；「区域录制」「区域截屏」不用管范围，按下就框选一次。&#xa;四个快捷键都是全局的，游戏运行时也能用。" />
                 </StackPanel>
             </local:MyCard>
 

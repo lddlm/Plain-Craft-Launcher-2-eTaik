@@ -31,7 +31,9 @@
                         <local:MyButton x:Name="BtnShot" Text="立即截屏" Height="34" Width="132" ColorType="Highlight" />
                         <local:MyButton x:Name="BtnOpenFolder" Text="打开 photo 文件夹" Height="34" Padding="15,0" Margin="10,0,0,0" />
                     </StackPanel>
-                    <TextBlock Text="游戏内按 Alt + W 可以随时截屏，不会打断游戏操作。图片保存在 PCL 目录下的 photo 文件夹。"
+                    <TextBlock x:Name="LabRange" Text="" Margin="0,12,0,0" FontSize="12.5"
+                               Foreground="{StaticResource ColorBrushGray3}" />
+                    <TextBlock x:Name="LabHotkeyTip" Text=""
                                Margin="0,13,0,0" FontSize="12.5" LineHeight="18" TextWrapping="Wrap"
                                Foreground="{StaticResource ColorBrushGray3}" />
                 </StackPanel>
@@ -48,8 +50,8 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="28" />
                             <RowDefinition Height="9" />
-                            <RowDefinition Height="28" />
-                            <RowDefinition Height="9" />
+                            <RowDefinition x:Name="RowHeight" Height="28" />
+                            <RowDefinition x:Name="RowHeightGap" Height="9" />
                             <RowDefinition Height="28" />
                             <RowDefinition Height="14" />
                             <RowDefinition Height="Auto" />
@@ -58,21 +60,21 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="截屏范围" Margin="0,0,25,0" />
-                        <Grid Grid.Row="0" Grid.Column="1">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                             <local:MyRadioBox local:SettingService.Key="ScreenshotMode" local:SettingService.Value="0"
                                               x:Name="RadioFullScreen" Text="全屏" Height="22" VerticalAlignment="Center"
                                               ToolTip="截取整个主屏幕，游戏全屏或窗口化都不影响。" />
                             <local:MyRadioBox local:SettingService.Key="ScreenshotMode" local:SettingService.Value="1"
-                                              x:Name="RadioGameWindow" Grid.Column="1" Text="锁定游戏窗口" Height="22"
+                                              x:Name="RadioGameWindow" Text="锁定游戏窗口" Height="22"
                                               Margin="36,0,0,0" VerticalAlignment="Center"
                                               ToolTip="只截游戏的画面区域，不含桌面上的其他窗口。&#xa;没找到游戏窗口时自动改为全屏。" />
-                        </Grid>
+                            <local:MyRadioBox local:SettingService.Key="ScreenshotMode" local:SettingService.Value="2"
+                                              x:Name="RadioRegion" Text="区域" Height="22"
+                                              Margin="36,0,0,0" VerticalAlignment="Center"
+                                              ToolTip="只截自己框出来的一块屏幕区域，按框选的原尺寸输出。&#xa;每次截屏时都会让你重新框选一次。" />
+                        </StackPanel>
 
-                        <TextBlock Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="分辨率" Margin="0,0,25,0" />
+                        <TextBlock x:Name="LabHeightLabel" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="分辨率" Margin="0,0,25,0" />
                         <local:MyComboBox local:SettingService.Key="ScreenshotHeight" x:Name="ComboHeight"
                                           Grid.Row="2" Grid.Column="1" ToolTip="输出图片的高度，宽度按画面比例自动计算。&#xa;「跟随原画」不缩放，画质最完整。">
                             <local:MyComboBoxItem Content="跟随原画" local:SettingService.Value="0" />

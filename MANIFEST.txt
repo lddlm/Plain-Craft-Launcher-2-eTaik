@@ -1,4 +1,4 @@
-# PCL eTaik 3.0 源码清单
+# PCL eTaik 3.1 源码清单
 # 相对路径 | 字节数 | sha256
 
 .gitattributes | 183 | 4157f8da21dc456cb1f9e0e20d964858ea65bf8a6f528d63aee3f5935ec2d3a6
@@ -115,7 +115,7 @@ Plain Craft Launcher 2/Images/Themes/8.png | 15668 | fd49bcd281a63d1676e50ea9321
 Plain Craft Launcher 2/Images/Themes/9.png | 21061 | e8e6a4593e1211b8ab0e7662bc3da89a3772d8c516af93dc3f2bb22c0552c924
 Plain Craft Launcher 2/Images/icon.ico | 145250 | f5f7a19e56db82b9d09c9706fd90ff806c23973022449905d8c43a504070250d
 Plain Craft Launcher 2/Modules/Base/ModAnimation.vb | 60504 | d00cf89c0ad2cd81bb3b15ebef54c54288b55b26c9b431f858579ff08b1efbd8
-Plain Craft Launcher 2/Modules/Base/ModBase.vb | 67688 | 8488d72fbdbb25d567da8e9d395c6caf8737e19d8a594c7732c89e399c562e6a
+Plain Craft Launcher 2/Modules/Base/ModBase.vb | 67688 | 703b1d5870b64cd48d21b28eb76550c3617cb86ff9eb6e93ed30a29251c2479c
 Plain Craft Launcher 2/Modules/Base/ModLoader.vb | 37389 | 97c9dfae5045cd997b25837204f34f7cc3d1906435ce1a7cbc4c3664f86eec60
 Plain Craft Launcher 2/Modules/Base/ModNet.vb | 95212 | 4bfffde0cf259e04375fa4c66211834952fa3c551d7424d6f2a920a6d628271c
 Plain Craft Launcher 2/Modules/Base/ModValidate.vb | 18233 | 56128d0b9a951280680bfcbd183acc49c771651a3e46a517dcaa9a041c4f88e7
@@ -133,7 +133,7 @@ Plain Craft Launcher 2/Modules/ModDevelop.vb | 78 | 9e2022686d90c099ee60f23234c5
 Plain Craft Launcher 2/Modules/ModEvent.vb | 20403 | dcaa7a255ba63f89b0c0a956c181f52538d9b61f94c06e4d80685da302eaa93a
 Plain Craft Launcher 2/Modules/ModMain.vb | 55205 | a0510519ee8129c2763b3bc4cbad97e277f704a83719e55ce712225d420a821b
 Plain Craft Launcher 2/Modules/ModMusic.vb | 14446 | 365c75cbb6e09f3002307354291ff7b562c21bb161acd7fa3b4d311b841b2f37
-Plain Craft Launcher 2/Modules/ModSecret.vb | 13288 | e82c134dc7bc84e67bf4960bbc52bb50991bcb03f0e228adc2369ac5e5acf833
+Plain Craft Launcher 2/Modules/ModSecret.vb | 13324 | 85682b0cf1053531b0b2c812140a37c149bf2092939260949565d3628e83f01c
 Plain Craft Launcher 2/Modules/Resource/LocalResourceFile.vb | 10244 | ecd5cff0a7852ceafb4e1a9164b2bb4a850b9232289fd38ba3d76ac83bc14c81
 Plain Craft Launcher 2/Modules/Resource/LocalResourceLoaders.vb | 23256 | 462cf983cbc22ff9ab134d8e733918209b7aa809991fded52fa6e1f0c7bea0d5
 Plain Craft Launcher 2/Modules/Resource/ResourceProject.vb | 36193 | fabf86f2f8369cb0f6311c2ac6832572775dff5c2ba7fe8b4c4f9f7940d58fd4
@@ -142,11 +142,11 @@ Plain Craft Launcher 2/Modules/Resource/ResourceVersion.vb | 23325 | d21a3178766
 Plain Craft Launcher 2/Modules/ThirdParty/DragHelper.vb | 5251 | 6c40dbc35c6b2365bf77f4c4cf92ccedbab1fa477b1965d68d8e7d31f6367ad4
 Plain Craft Launcher 2/Modules/UltraAppearance.vb | 8502 | f544892d29eadfb68139f5690d086aea3a37c8963a9828f43ef7d3a4db582574
 Plain Craft Launcher 2/Modules/UltraMf.vb | 19434 | ffff322572d3e37a135050497e01497a9890892a0975642b652075ba1357945c
-Plain Craft Launcher 2/Modules/UltraScreenshot.vb | 18074 | e002b166b7fb16ca41a4f027a82f530acc056e35a30f9eb445ac2455a69dd043
-Plain Craft Launcher 2/Modules/UltraVideo.vb | 26826 | 2949b5f6ac23515e1a85c11470b5480cba30eff23da28fcf6fbeaa076883172c
-Plain Craft Launcher 2/Modules/UltraVideoNative.vb | 52207 | 71dbcde114fde8ad495270a2e459c22a81e9efd5ea193ef2eac97f18b07e7e32
+Plain Craft Launcher 2/Modules/UltraScreenshot.vb | 22726 | 1facb9ebe52a39f9016721106caa80b15ff75324f539b217b214333b80287fa1
+Plain Craft Launcher 2/Modules/UltraVideo.vb | 35282 | 1a70da10dfac701a5252ef42ec49a8bae34847f5630115ad8fbe091736e509ae
+Plain Craft Launcher 2/Modules/UltraVideoNative.vb | 53764 | bd95e67d825da5a2d3c13ccd399394daf43e24339e6953e041beac0b0d6fdac7
 Plain Craft Launcher 2/Modules/UltraWasapi.vb | 6590 | 6a6fafe634b5ad829e901eba5ed0cd8eb80421a3b10dc333194d0cd7fa2f75d4
-Plain Craft Launcher 2/My Project/AssemblyInfo.vb | 2164 | f77f681488ccd07eb7d8cde9b34f4e4f2d62c88f494a18266d05c1b290e8fc36
+Plain Craft Launcher 2/My Project/AssemblyInfo.vb | 2164 | 02a6e892b55e45d4c96125461a65f02a77a8ce773bf1ff383f2cb0c5d129b058
 Plain Craft Launcher 2/My Project/MyExtensions/MyWpfExtension.vb | 6846 | 1c0d2fe13ba972c120903f61e34517b0a3d5e874f9c01e331d204aecb452d273
 Plain Craft Launcher 2/My Project/Resources.Designer.vb | 8943 | d25ab6032990133070c878436992bdc616ce97ef2db4fc313c27f2ccc63fa232
 Plain Craft Launcher 2/My Project/Resources.resx | 11140 | a1ad57ff7907b73679c5baf431efe29daa9d556419960a6ed5b5be7d6124dc1e
@@ -245,25 +245,25 @@ Plain Craft Launcher 2/Pages/PageSetup/PageSetupMemory.xaml | 3966 | b7b773f98ac
 Plain Craft Launcher 2/Pages/PageSetup/PageSetupMemory.xaml.vb | 3321 | 81a3db9470c3059891b38f0b4db77d4775b9a0d1f0f599f7dc1db6d58bb1cae1
 Plain Craft Launcher 2/Pages/PageSetup/PageSetupMore.xaml | 8107 | 63e4612fe95994e46760577c4fdc8971015c97b5ed688147aa26e567b3fcbad9
 Plain Craft Launcher 2/Pages/PageSetup/PageSetupMore.xaml.vb | 5085 | a2ea7119274687245ffda6ec047da8790a90109402e67515020c56e79e5c1ab5
-Plain Craft Launcher 2/Pages/PageSetup/PageSetupShortcut.xaml | 4282 | 3629d6fbb64d7445b54897b4c215c2f04383ebdfbde585bbd3f8681861902b2d
-Plain Craft Launcher 2/Pages/PageSetup/PageSetupShortcut.xaml.vb | 3829 | 0cd8934fcb0f729d9f0b78b0dfeedaebcd3b53135367b822a4fe5fd98d239a36
+Plain Craft Launcher 2/Pages/PageSetup/PageSetupShortcut.xaml | 5697 | c8008726edb4539d9820716c9b923a3602812bed3ea2c24e7dbbfbca772b8809
+Plain Craft Launcher 2/Pages/PageSetup/PageSetupShortcut.xaml.vb | 8097 | ce38199d1a3f6e5a5c234c59009a6e79d5db503ddf198b4250db75bf68b2d2b0
 Plain Craft Launcher 2/Pages/PageSetup/PageSetupSystem.xaml | 18028 | 63223da771312d4d1128cb7c5e97f1147328b19b8ae4a26ede83a03ff73bb5c9
 Plain Craft Launcher 2/Pages/PageSetup/PageSetupSystem.xaml.vb | 6433 | 67bb2fc278d65b8ea285b7fc97a9a538365e3e20209ebead48699eaaf802bc08
 Plain Craft Launcher 2/Pages/PageSetup/PageSetupUI.xaml | 47753 | 55f3d64a53e31a5a05fd01fcade0694941de32c1f859da185668dd5c3099adae
 Plain Craft Launcher 2/Pages/PageSetup/PageSetupUI.xaml.vb | 61745 | 7ce8b98eb730fcc3f853cd4e6ea5b6591480f5b29cd56c9c58a90ee635ca3e05
 Plain Craft Launcher 2/Pages/PageSetup/SettingService.vb | 3178 | c7b99c87e460573a59e5fc6425f82aabafb2fd9989f6956249a3045d7c895580
-Plain Craft Launcher 2/Pages/PageSetup/Settings.vb | 31415 | 089a7e21309af00eefffb969ef850d53c3b4b3277c659fb4049bf1f791311ff9
+Plain Craft Launcher 2/Pages/PageSetup/Settings.vb | 31522 | c327012fc73868f08d28503fb3584430ab1b913500e9f265cb275450c7e225a9
 Plain Craft Launcher 2/Pages/PageSpeedLeft.xaml | 3518 | ffa710d5054c2fb060e2743c902ece2c1ab1192f25ff4e0fb38ef8b4177d4af5
 Plain Craft Launcher 2/Pages/PageSpeedLeft.xaml.vb | 15931 | a5d80ef7e74a199527180a7c138e08dfb9ea50613c7464941a37a6ff4c5b0005
 Plain Craft Launcher 2/Pages/PageSpeedRight.xaml | 4120 | 458fe87243968414a4a16c15b684693454fb81ba49806bd2700485d9a096988d
 Plain Craft Launcher 2/Pages/PageSpeedRight.xaml.vb | 124 | 016549eed6ed87736a1c76263faf8125000ea81c5dd0218033aeef3806fc226e
 Plain Craft Launcher 2/Pages/PageTool/PageToolLeft.xaml | 1805 | d3acacda309059e4fc782384eb4e64b8a87a6bde0e3815611b54f2f6ce7aa55b
 Plain Craft Launcher 2/Pages/PageTool/PageToolLeft.xaml.vb | 3565 | 035adecdce42a1fab13cd10670001a2f02d3ebeb4cdea594d4387291e3409bfe
-Plain Craft Launcher 2/Pages/PageTool/PageToolRecord.xaml | 12206 | 74f49a957746a6468e538f6c58254d1b529944a3efac962ab371327a5d1631af
-Plain Craft Launcher 2/Pages/PageTool/PageToolRecord.xaml.vb | 10641 | 9d52d43b768d0df67af16561b80932c0609603abd56248ecfcc3a3fc5669a857
-Plain Craft Launcher 2/Pages/PageTool/PageToolScreenshot.xaml | 7880 | c22de8b504da099e9f6abc714053e5f02348d7f17923f47dd561efe4ae6827cd
-Plain Craft Launcher 2/Pages/PageTool/PageToolScreenshot.xaml.vb | 2172 | 162aca4f1be02c520db2e18bb3f70fe12b21f920c069d836b0a28d510f5dc19e
-Plain Craft Launcher 2/Plain Craft Launcher 2.vbproj | 43277 | 2e02745a708f7cf5243d172daf29eb82f1135d4ecf6fe61f8741a6f823ec3045
+Plain Craft Launcher 2/Pages/PageTool/PageToolRecord.xaml | 12589 | 9af20796d1ecbe0dcc5f5896e6bd62ac458f7fb295dbdc84a5e030fb87d5714c
+Plain Craft Launcher 2/Pages/PageTool/PageToolRecord.xaml.vb | 12973 | 6b9419a624883f81a4b83cf9ff6360106fc807e1b4005e50fbfee75b8533ef74
+Plain Craft Launcher 2/Pages/PageTool/PageToolScreenshot.xaml | 8318 | 728fbcaeb274f1cf1f580b7787269505910ffab685d3c77203ce540ceec44727
+Plain Craft Launcher 2/Pages/PageTool/PageToolScreenshot.xaml.vb | 4710 | 79fd1996445dc8632ddff30f3af384b0626f9b71acc91e6fc095fdb73689be52
+Plain Craft Launcher 2/Plain Craft Launcher 2.vbproj | 43876 | d72286922d1bf2835f067ee8a17e98e8935f8f19817882af1887745a4eabaa49
 Plain Craft Launcher 2/Resources/CacheCow.Client.FileStore.dll | 9728 | d7debf2b9fa9bce29af49f8b16b87bee9a85c7c414dfc2f94f0beba6bdb3fcfa
 Plain Craft Launcher 2/Resources/CacheCow.Client.dll | 37376 | 0744f961654253d4d836f48612bdf07dbac951527ae7f037eeeb70fc63eab425
 Plain Craft Launcher 2/Resources/CacheCow.Common.dll | 13824 | f0fc15fd4b71556d211388577a69e9f4d06000ca6c9e508078c263935c6df4dc
@@ -283,10 +283,14 @@ Plain Craft Launcher 2/Resources/ThrottleDebounce.dll | 46592 | 64656ae2d66e4101
 Plain Craft Launcher 2/Resources/forge-installer.jar | 3222 | 7e37ac73caea277d22ba16032bc91a9f2fa1974b0739824a5f8e71b8393a6745
 Plain Craft Launcher 2/Resources/libwebp64.dll | 457728 | dc14a3500d5a7763191d1ced09efbeeb7dbe79a762811ea2cdb1d2f47f1032a6
 Plain Craft Launcher 2/Resources/transformer.jar | 2243 | ea5756fec2e06d5aa5824b54f9c26ae46a7ab43ca9a57e747f1f63e1269f7dad
+Plain Craft Launcher 2/WindowRecordFrame.xaml | 689 | 61b249e1d58e468d3142b75b9b4c6016df602f56bb2bcaf82dfda1a5fb0ebf92
+Plain Craft Launcher 2/WindowRecordFrame.xaml.vb | 14055 | 6b5688b9738ea10a62eff99e2ab2b186c7a58075eb5d8411b0287eca2299c432
+Plain Craft Launcher 2/WindowRegionSelect.xaml | 2036 | 2f10106d33a73767b92c7253968c64fa2e9afc74c14c9afd81d9b1ff042d2da9
+Plain Craft Launcher 2/WindowRegionSelect.xaml.vb | 10298 | 5bdf603d7f3c93ce3dbd4928250da3153956d1c569bc205f04eb8f09a89c6b52
 Plain Craft Launcher 2/WindowVideoToast.xaml | 2588 | 52e8b96bc0c3f4b1ad100dca424aa1f8f5de0c38c20a8fc654f55f00bd3cae4a
-Plain Craft Launcher 2/WindowVideoToast.xaml.vb | 7059 | 3095631859e65dceedfab044423d1adeda5f447c94ae0ab3064493101ebd3559
+Plain Craft Launcher 2/WindowVideoToast.xaml.vb | 7054 | 98d08dfaa2ffbf0967369bd583a3bd89a90fd5b3df17862b26595bb6355ceb7c
 Plain Craft Launcher 2/app.manifest | 3409 | 7d96ee4481b9f8a87ec086ac1347357b5c2103fc8ce81cc709e01d9cc2c45240
-README.md | 5185 | 514f867ada8d186488339316a9b8084940e32417e850ec7e638e656906bd24ae
+README.md | 6955 | 9fb6e63c86fd81e6f8c8001e6cebf1fe4ed60d2ff6cf051ea512e19e596e2de6
 docs/images/01-launch.png | 92945 | d6e5ccca867fe7df41909f40e9d4dc1f6a23d63829e8ff549d263c5a92201b35
 docs/images/02-mod-manager.png | 186402 | 7ad9fc46b4977b49b5ce594d08c0ab70200614a1c47acd1b239a53865326d523
 docs/images/03-download.png | 116906 | 66947f85f3f75f2efacf94d58e69e90ee02e2e2af099be90266a72c66bf20eca
@@ -294,4 +298,4 @@ docs/images/04-toolbox.png | 123201 | f38622936fe62d789f8881beae151c3639608128a4
 docs/images/05-settings.png | 126523 | a2bb9c6370f8c299f10d54105a7bab207ef76463cd3e6dc520f3f0b7861dd9a1
 docs/images/06-toast.png | 2909 | 57180cf2f0e1c860c50b378dd93e711df809df55bb08019e0d59dc02d83804c9
 
-# 共 292 个文件，7574050 字节（7.22 MB）
+# 共 296 个文件，7629674 字节（7.28 MB）

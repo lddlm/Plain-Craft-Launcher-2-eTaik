@@ -24,6 +24,8 @@ Public Class WindowVideoToast
     Private Sub OnSourceInitialized(sender As Object, e As EventArgs)
         Try
             UltraVideo.MarkOverlayWindow(New WindowInteropHelper(Me).Handle)
+            '提示条本身不该出现在录像 / 截图里
+            If UltraVideo.UseCaptureExclude Then UltraVideo.SetWindowCaptureExclude(Me, True)
         Catch ex As Exception
             Logger.Warn(ex, "初始化录制提示条失败")
         End Try

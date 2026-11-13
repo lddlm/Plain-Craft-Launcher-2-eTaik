@@ -1,0 +1,36 @@
+﻿<Window
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Class="WindowRegionSelect"
+    WindowStyle="None" ResizeMode="NoResize" ShowInTaskbar="False"
+    Topmost="True" WindowStartupLocation="Manual" Background="#FF000000"
+    Title="选择区域" Cursor="Cross" SnapsToDevicePixels="True">
+    <!-- 不用 AllowsTransparency：那会退回软件渲染。
+         改为先把屏幕冻结成一张图垫在底下，再在图上画遮罩，视觉上等价于半透明。 -->
+    <Grid x:Name="PanRoot" ClipToBounds="True">
+        <Image x:Name="ImgScreen" Stretch="Fill" SnapsToDevicePixels="True" />
+
+        <Canvas x:Name="PanCanvas">
+            <!-- 选区之外的四个遮罩块 -->
+            <Rectangle x:Name="DimTop" Fill="#99000000" IsHitTestVisible="False" />
+            <Rectangle x:Name="DimLeft" Fill="#99000000" IsHitTestVisible="False" />
+            <Rectangle x:Name="DimRight" Fill="#99000000" IsHitTestVisible="False" />
+            <Rectangle x:Name="DimBottom" Fill="#99000000" IsHitTestVisible="False" />
+            <!-- 选区边框 -->
+            <Border x:Name="SelBorder" BorderBrush="#FF3B9CFF" BorderThickness="1.5"
+                    Background="Transparent" Visibility="Collapsed" IsHitTestVisible="False" />
+            <!-- 尺寸气泡 -->
+            <Border x:Name="SizeBadge" Background="#D9101010" CornerRadius="4" Padding="8,3"
+                    Visibility="Collapsed" IsHitTestVisible="False">
+                <TextBlock x:Name="LabSize" Foreground="#FFFFFFFF" FontSize="12.5" />
+            </Border>
+        </Canvas>
+
+        <!-- 顶部操作提示 -->
+        <Border x:Name="HintBadge" HorizontalAlignment="Center" VerticalAlignment="Top"
+                Margin="0,28,0,0" Background="#D9101010" CornerRadius="5" Padding="16,9"
+                IsHitTestVisible="False">
+            <TextBlock x:Name="LabHint" Foreground="#FFFFFFFF" FontSize="14" />
+        </Border>
+    </Grid>
+</Window>

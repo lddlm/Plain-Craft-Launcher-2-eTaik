@@ -39,8 +39,10 @@
                         <local:MyButton x:Name="BtnRecord" Text="开始录制" Height="34" Width="132" ColorType="Highlight" />
                         <local:MyButton x:Name="BtnOpenFolder" Text="打开 video 文件夹" Height="34" Padding="15,0" Margin="10,0,0,0" />
                     </StackPanel>
+                    <TextBlock x:Name="LabRange" Text="" Margin="0,12,0,0" FontSize="12.5"
+                               Foreground="{StaticResource ColorBrushGray3}" />
                     <TextBlock x:Name="LabHotkeyTip" Text="游戏内按 Alt + Q 可以随时开始或结束录制，不会打断游戏操作。"
-                               Margin="0,13,0,0" FontSize="12.5" LineHeight="18" TextWrapping="Wrap"
+                               Margin="0,6,0,0" FontSize="12.5" LineHeight="18" TextWrapping="Wrap"
                                Foreground="{StaticResource ColorBrushGray3}" />
                 </StackPanel>
             </local:MyCard>
@@ -56,8 +58,8 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="28" />
                             <RowDefinition Height="9" />
-                            <RowDefinition Height="28" />
-                            <RowDefinition Height="9" />
+                            <RowDefinition x:Name="RowHeight" Height="28" />
+                            <RowDefinition x:Name="RowHeightGap" Height="9" />
                             <RowDefinition Height="28" />
                             <RowDefinition Height="9" />
                             <RowDefinition Height="28" />
@@ -70,21 +72,21 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="录制范围" Margin="0,0,25,0" />
-                        <Grid Grid.Row="0" Grid.Column="1">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                             <local:MyRadioBox local:SettingService.Key="VideoMode" local:SettingService.Value="0"
                                               x:Name="RadioFullScreen" Text="全屏" Height="22" VerticalAlignment="Center"
                                               ToolTip="录制整个主屏幕，游戏全屏或窗口化都不影响。" />
                             <local:MyRadioBox local:SettingService.Key="VideoMode" local:SettingService.Value="1"
-                                              x:Name="RadioGameWindow" Grid.Column="1" Text="锁定游戏窗口" Height="22"
+                                              x:Name="RadioGameWindow" Text="锁定游戏窗口" Height="22"
                                               Margin="36,0,0,0" VerticalAlignment="Center"
                                               ToolTip="只录游戏的画面区域，不含桌面上的其他窗口。&#xa;窗口移动后需要重新开始录制才会重新定位。" />
-                        </Grid>
+                            <local:MyRadioBox local:SettingService.Key="VideoMode" local:SettingService.Value="2"
+                                              x:Name="RadioRegion" Text="区域" Height="22"
+                                              Margin="36,0,0,0" VerticalAlignment="Center"
+                                              ToolTip="只录自己框出来的一块屏幕区域，按框选的原尺寸输出。&#xa;每次开始录制时都会让你重新框选一次。" />
+                        </StackPanel>
 
-                        <TextBlock Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="分辨率" Margin="0,0,25,0" />
+                        <TextBlock x:Name="LabHeightLabel" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="分辨率" Margin="0,0,25,0" />
                         <local:MyComboBox local:SettingService.Key="VideoHeight" x:Name="ComboHeight"
                                           Grid.Row="2" Grid.Column="1" ToolTip="输出视频的高度，宽度按画面比例自动计算。&#xa;选得比屏幕高时会放大输出（比如 1080p 屏幕录 4K），更吃性能。">
                             <local:MyComboBoxItem Content="跟随原画" local:SettingService.Value="0" />

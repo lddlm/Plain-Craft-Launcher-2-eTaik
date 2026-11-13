@@ -11,7 +11,7 @@ Friend Module ModSecret
     '此处填入官方正式版使用的公开设备码 ClientId（设备码流程无需 Client Secret）。
     '仍保留 PCL_MS_CLIENT_ID 环境变量覆盖，便于改用自行注册的 Azure 应用。
     '复用官方应用标识仅限个人本地使用，不得对外分发。
-    Public OAuthClientId As String = If(Environment.GetEnvironmentVariable("PCL_MS_CLIENT_ID"), "")
+    Public OAuthClientId As String = If(Environment.GetEnvironmentVariable("PCL_MS_CLIENT_ID"), "fe72edc2-3a6f-4280-90e8-e2beb64ce7e1")
     'CurseForge API Key
     Public CurseForgeAPIKey As String = If(Environment.GetEnvironmentVariable("PCL_CURSEFORGE_API_KEY"), "")
     '用于匿名数据收集的腾讯云日志服务上报 URL，形如 https://{region}.cls.tencentcs.com/track?topic_id={topic_id}

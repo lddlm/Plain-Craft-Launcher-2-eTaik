@@ -522,6 +522,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="WindowRegionSelect.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="WindowRecordFrame.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Compile Include="Application.xaml.vb">
       <DependentUpon>Application.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -557,6 +565,14 @@
     </Compile>
     <Compile Include="WindowVideoToast.xaml.vb">
       <DependentUpon>WindowVideoToast.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="WindowRegionSelect.xaml.vb">
+      <DependentUpon>WindowRegionSelect.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="WindowRecordFrame.xaml.vb">
+      <DependentUpon>WindowRecordFrame.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
 

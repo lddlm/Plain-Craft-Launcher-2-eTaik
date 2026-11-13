@@ -54,6 +54,9 @@ Public Module UltraVideoNative
     Private PoolIndex As Integer
     Private StagingTexture As Texture2D
     Private UseCpuSamples As Boolean = False
+    '用来确认显卡真的把这一帧画完了，再释放桌面帧（Map 会阻塞到绘制完成）
+    Private SyncTexture As Texture2D = Nothing
+    Private LastOutputTexture As Texture2D = Nothing
 
     '声音：WASAPI 回环。所有 COM 对象都跟视频一样在采集线程里创建/使用/释放，
     '不另开线程，避免单元不匹配，也让音频时间戳和视频共用同一个时钟起点。
@@ -396,8 +399,11 @@ Public Module UltraVideoNative
         Dim Content As New VideoProcessorContentDescription
         Content.InputFrameFormat = VideoFrameFormat.Progressive
         Content.InputFrameRate = New SharpDX.DXGI.Rational(FrameRate, 1)
-        Content.InputWidth = SrcWidth
-        Content.InputHeight = SrcHeight
+        '输入纹理是「整块桌面」，不是裁出来的那一小块：
+        '这里必须写显示器的全尺寸，裁切交给下面的 StreamSourceRect。
+        '写成 SrcWidth / SrcHeight 会让裁切坐标落在这个假想尺寸之外，录出来是大片绿色。
+        Content.InputWidth = OutputDesc.DesktopBounds.Right - OutputDesc.DesktopBounds.Left
+        Content.InputHeight = OutputDesc.DesktopBounds.Bottom - OutputDesc.DesktopBounds.Top
         Content.OutputFrameRate = New SharpDX.DXGI.Rational(FrameRate, 1)
         Content.OutputWidth = OutWidth
         Content.OutputHeight = OutHeightPx
@@ -413,6 +419,14 @@ Public Module UltraVideoNative
         VideoContext.VideoProcessorSetStreamDestRect(Processor, 0, True,
             New RawRectangle(0, 0, OutWidth, OutHeightPx))
         VideoContext.VideoProcessorSetOutputTargetRect(Processor, True, New RawRectangle(0, 0, OutWidth, OutHeightPx))
+
+        '0. 同步用的小纹理：区域录制要缩放，Blt 耗时更长，
+        '必须等它画完再放掉桌面帧，否则录出来是大片绿色（NV12 全零）
+        SyncTexture = New Texture2D(Device, New Texture2DDescription With {
+            .Width = 16, .Height = 16, .MipLevels = 1, .ArraySize = 1,
+            .Format = Format.NV12, .SampleDescription = New SampleDescription(1, 0),
+            .Usage = ResourceUsage.Staging, .BindFlags = BindFlags.None,
+            .CpuAccessFlags = CpuAccessFlags.Read, .OptionFlags = ResourceOptionFlags.None})
 
         '5. 输出纹理池
         OutTextures = New Texture2D(PoolSize - 1) {}
@@ -602,6 +616,13 @@ Public Module UltraVideoNative
             End Try
             StagingTexture = Nothing
         End If
+        If SyncTexture IsNot Nothing Then
+            Try
+                SyncTexture.Dispose()
+            Catch
+            End Try
+            SyncTexture = Nothing
+        End If
         If InputView IsNot Nothing Then
             Try
                 InputView.Dispose()
@@ -748,6 +769,28 @@ Public Module UltraVideoNative
         End While
     End Sub
 
+    ''' <summary>
+    ''' 等待显卡把已提交的绘制真正做完。
+    ''' 做法：把输出纹理左上角一小块拷进 staging 纹理，再 Map 读它——
+    ''' D3D11 会在 Map 时等前面所有绘制完成，等价于一次轻量同步。
+    ''' </summary>
+    Private Sub WaitForGpu()
+        If SyncTexture Is Nothing Then Return
+        Try
+            Context.CopySubresourceRegion(SyncTexture, 0, New ResourceRegion(0, 0, 0, 16, 16, 1),
+                                          LastOutputTexture, 0)
+            Context.MapSubresource(SyncTexture, 0, MapMode.Read, SharpDX.Direct3D11.MapFlags.None)
+            Context.UnmapSubresource(SyncTexture, 0)
+        Catch ex As Exception
+            Logger.Warn(ex, "等待显卡绘制完成失败，本次录制改为不同步")
+            Try
+                SyncTexture.Dispose()
+            Catch
+            End Try
+            SyncTexture = Nothing
+        End Try
+    End Sub
+
     Private Sub PushFrame(Source As Texture2D, NowMs As Double, ByRef LastTime As Long, FrameDuration As Long)
         '输入视图必须绑定固定纹理，每帧按当前桌面纹理重建一次（很便宜）
         If InputView IsNot Nothing Then
@@ -767,11 +810,6 @@ Public Module UltraVideoNative
 
         Dim Index As Integer = PoolIndex
         PoolIndex = (PoolIndex + 1) Mod PoolSize
-        If UseCpuSamples Then
-            WriteSampleFromCpu(OutTextures(Index), CLng(NowMs * 10000.0),
-                               If(LastTime > 0, Math.Max(1000, CLng(NowMs * 10000.0) - LastTime), FrameDuration))
-            Return
-        End If
 
         Dim OneStream As New VideoProcessorStream
         OneStream.Enable = True
@@ -780,7 +818,24 @@ Public Module UltraVideoNative
         OneStream.PastFrames = 0
         OneStream.FutureFrames = 0
         OneStream.PInputSurface = InputView.NativePointer
-        VideoContext.VideoProcessorBlt(Processor, OutViews(Index), 0, 1, New VideoProcessorStream() {OneStream})
+        LastOutputTexture = OutTextures(Index)
+        VideoContext.VideoProcessorBlt(Processor, OutViews(Index), 0, 1,
+                                       New VideoProcessorStream() {OneStream})
+
+        Dim NowTime As Long = CLng(NowMs * 10000.0)
+        Dim Duration As Long = If(LastTime > 0, Math.Max(1000, NowTime - LastTime), FrameDuration)
+
+        '回读模式也必须先 Blt：这一步负责把桌面画面画进输出纹理，
+        '跳过它只会读到纹理池里的旧数据（表现为整段视频纯绿）。
+        '回读里的 Map 本身就会等显卡，所以不需要额外同步。
+        If UseCpuSamples Then
+            WriteSampleFromCpu(OutTextures(Index), NowTime, Duration)
+            Return
+        End If
+
+        '显存样本不会再读回内存，必须自己确认这一帧画完了，
+        '否则调用方随后 ReleaseFrame 会把还没读完的桌面纹理放掉。
+        WaitForGpu()
 
         Dim Buffer As IMFMediaBuffer = Nothing
         Dim Hr = UltraMf.MFCreateDXGISurfaceBuffer(UltraMf.IidTexture2D, OutTextures(Index).NativePointer, 0, False, Buffer)
@@ -789,8 +844,6 @@ Public Module UltraVideoNative
         Hr = UltraMf.MFCreateSample(Sample)
         If Hr <> 0 Then Throw New Exception($"创建帧失败（0x{Hr:X8}）")
         Sample.AddBuffer(Buffer)
-        Dim NowTime As Long = CLng(NowMs * 10000.0)
-        Dim Duration As Long = If(LastTime > 0, Math.Max(1000, NowTime - LastTime), FrameDuration)
         Sample.SetSampleTime(NowTime)
         Sample.SetSampleDuration(Duration)
         Hr = Writer.WriteSample(0, Sample)

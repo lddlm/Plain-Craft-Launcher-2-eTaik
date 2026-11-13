@@ -6,13 +6,16 @@ Imports System.Windows.Threading
 
 ''' <summary>
 ''' Ultra：游戏录制。
-''' 用外置 ffmpeg.exe 采集桌面（gdigrab），支持全屏 / 锁定游戏窗口、分辨率 / 帧率 / 码率调节、
-''' 游戏启动自动录制、Alt + Z 全局热键；录制状态用悬浮窗提示在游戏右上角。
+''' 用原生桌面复制 + Media Foundation 采集，支持全屏 / 锁定游戏窗口 / 框选区域、
+''' 分辨率 / 帧率 / 码率调节、游戏启动自动录制；录制状态用悬浮窗提示在游戏右上角。
+''' 录制范围由设置决定，全局快捷键只负责开始与结束。
 ''' </summary>
 Public Module UltraVideo
 
     '热键
     Private Const HotkeyId As Integer = &H5056
+    '区域录制热键（默认 Alt + 1，可在设置里改）
+    Private Const RegionHotkeyId As Integer = &H5058
     Public Const WM_HOTKEY As Integer = &H312
     Private Const MOD_ALT As Integer = 1
     Public Const MOD_CONTROL As Integer = 2
@@ -27,6 +30,8 @@ Public Module UltraVideo
     Private RecordingAuto As Boolean
     Private RecordingTarget As IntPtr
     Private RecordingDetail As String = ""
+    '本次录制是否为区域录制（区域录制用红框计时器代替提示条）
+    Private RecordingIsRegion As Boolean
     Private IsMuted As Boolean = False
     Private KeyboardHookHandle As IntPtr = IntPtr.Zero
     Private KeyboardHookCallback As Native.LowLevelKeyboardProc
@@ -35,6 +40,11 @@ Public Module UltraVideo
     Private HotkeyMods As Integer = MOD_ALT
     Private HotkeyVK As Integer = &H51
     Private HotkeyIsRegistered As Boolean = False
+    '区域录制热键（默认 Alt + 1）
+    Private RegionHotkeyMods As Integer = MOD_ALT
+    Private RegionHotkeyVK As Integer = &H31
+    Private RegionHotkeyIsRegistered As Boolean = False
+    Private RegionHotkeyHeld As Boolean = False
     Private HookMods As Integer = 0
 
     ''' <summary>录制状态发生变化（开始 / 结束）时触发。</summary>
@@ -73,6 +83,13 @@ Public Module UltraVideo
         End Get
     End Property
 
+    ''' <summary>区域录制快捷键的显示文本，例如「Alt + 1」。</summary>
+    Public ReadOnly Property RegionHotkeyText As String
+        Get
+            Return FormatHotkey(RegionHotkeyMods, RegionHotkeyVK)
+        End Get
+    End Property
+
     ''' <summary>快捷键是否成功注册为系统热键（False 表示用的是键盘钩子兜底）。</summary>
     Public ReadOnly Property HotkeyRegistered As Boolean
         Get
@@ -87,6 +104,7 @@ Public Module UltraVideo
         If Hwnd = IntPtr.Zero Then Return False
         AddHandler UltraVideoNative.CaptureFailed, AddressOf OnNativeCaptureFailed
         HotkeyHwnd = Hwnd
+        'ApplyHotkey 里会顺带把区域录制热键一起注册好
         Return ApplyHotkey()
     End Function
 
@@ -94,25 +112,73 @@ Public Module UltraVideo
     Public Function ApplyHotkey() As Boolean
         ParseHotkey(Settings.Get(Of String)("VideoHotkey"), HotkeyMods, HotkeyVK)
         If HotkeyHwnd = IntPtr.Zero Then Return False
+        '先把区域录制那个摘掉：主热键可能刚被改成和它一样，不摘会一直抢不到
+        Try
+            Native.UnregisterHotKey(HotkeyHwnd, RegionHotkeyId)
+        Catch
+        End Try
+        RegionHotkeyIsRegistered = False
         Try
             Native.UnregisterHotKey(HotkeyHwnd, HotkeyId)
         Catch
         End Try
         HotkeyIsRegistered = False
+        Dim Ok As Boolean
         Try
             If Native.RegisterHotKey(HotkeyHwnd, HotkeyId, HotkeyMods, HotkeyVK) Then
                 HotkeyIsRegistered = True
+                Ok = True
                 Logger.Info($"已注册录屏热键：{HotkeyText}")
-                Return True
+            Else
+                '被别的软件占用了，退回低级键盘钩子，热键照样可以用
+                Logger.Warn($"注册录屏热键 {HotkeyText} 失败（错误码 {Marshal.GetLastWin32Error()}），改用键盘钩子监听")
+                Ok = InstallKeyboardHook()
             End If
-            '被别的软件占用了，退回低级键盘钩子，热键照样可以用
-            Logger.Warn($"注册录屏热键 {HotkeyText} 失败（错误码 {Marshal.GetLastWin32Error()}），改用键盘钩子监听")
-            Return InstallKeyboardHook()
         Catch ex As Exception
             Logger.Error(ex, "注册录屏热键失败")
+            Ok = False
+        End Try
+        '主热键落定后，再把区域录制热键补回来（撞车的话它自己会跳过）
+        ApplyRegionHotkey()
+        Return Ok
+    End Function
+
+    ''' <summary>
+    ''' 注册区域录制热键（默认 Alt + 1）。注册失败不抛异常，交给键盘钩子兜底。
+    ''' </summary>
+    Public Function ApplyRegionHotkey() As Boolean
+        ParseHotkey(Settings.Get(Of String)("VideoRegionHotkey"), RegionHotkeyMods, RegionHotkeyVK)
+        If HotkeyHwnd = IntPtr.Zero Then Return False
+        Try
+            Native.UnregisterHotKey(HotkeyHwnd, RegionHotkeyId)
+        Catch
+        End Try
+        RegionHotkeyIsRegistered = False
+        '和主热键撞了就不注册，免得一次按键触发两遍
+        If RegionHotkeyMods = HotkeyMods AndAlso RegionHotkeyVK = HotkeyVK Then
+            Logger.Warn($"区域录制快捷键 {RegionHotkeyText} 与录制快捷键重复，已跳过注册")
+            Return False
+        End If
+        Try
+            If Native.RegisterHotKey(HotkeyHwnd, RegionHotkeyId, RegionHotkeyMods, RegionHotkeyVK) Then
+                RegionHotkeyIsRegistered = True
+                Logger.Info($"已注册区域录制热键：{RegionHotkeyText}")
+                Return True
+            End If
+            Logger.Warn($"注册区域录制热键 {RegionHotkeyText} 失败（错误码 {Marshal.GetLastWin32Error()}），由键盘钩子兜底")
+            Return False
+        Catch ex As Exception
+            Logger.Error(ex, "注册区域录制热键失败")
             Return False
         End Try
     End Function
+
+    ''' <summary>录制范围：全屏。</summary>
+    Public Const VideoModeFullScreen As Integer = 0
+    ''' <summary>录制范围：锁定游戏窗口。</summary>
+    Public Const VideoModeGameWindow As Integer = 1
+    ''' <summary>录制范围：自定义区域（每次开始录制时框选）。</summary>
+    Public Const VideoModeRegion As Integer = 2
 
     ''' <summary>
     ''' 兜底方案：低级键盘钩子监听配置的快捷键。
@@ -164,10 +230,17 @@ Public Module UltraVideo
                             HotkeyHeld = True
                             ToggleRecording()
                         End If
+                    ElseIf Info.vkCode = RegionHotkeyVK AndAlso HookMods = RegionHotkeyMods AndAlso Not RegionHotkeyIsRegistered Then
+                        '只有 RegisterHotKey 没抢到区域键时才由钩子处理，避免一次按键触发两遍
+                        If Not RegionHotkeyHeld Then
+                            RegionHotkeyHeld = True
+                            ToggleRegionRecording()
+                        End If
                     End If
                 ElseIf Message = &H101 OrElse Message = &H105 Then 'WM_KEYUP / WM_SYSKEYUP
                     UpdateHookMods(Info.vkCode, False)
                     If Info.vkCode = HotkeyVK Then HotkeyHeld = False
+                    If Info.vkCode = RegionHotkeyVK Then RegionHotkeyHeld = False
                 End If
             End If
         Catch ex As Exception
@@ -180,9 +253,16 @@ Public Module UltraVideo
     ''' 主窗口收到 WM_HOTKEY 时调用。返回是否吃掉了该消息。
     ''' </summary>
     Public Function OnHotkey(WParam As IntPtr) As Boolean
-        If WParam.ToInt32() <> HotkeyId Then Return False
-        ToggleRecording()
-        Return True
+        Dim Id As Integer = WParam.ToInt32()
+        If Id = HotkeyId Then
+            ToggleRecording()
+            Return True
+        End If
+        If Id = RegionHotkeyId Then
+            ToggleRegionRecording()
+            Return True
+        End If
+        Return False
     End Function
 
     ''' <summary>把「Alt+Q」这类文本解析成修饰键与虚拟键码，失败时保持原值。</summary>
@@ -322,21 +402,41 @@ Public Module UltraVideo
     ''' 开始录制。
     ''' </summary>
     ''' <param name="Auto">是否由「游戏启动自动录制」触发。</param>
-    Public Sub StartRecording(Optional Auto As Boolean = False)
+    ''' <param name="Region">显式指定的录制区域（Alt + 1 区域录制）。传 Nothing 时按「录制范围」设置决定全屏、锁定窗口还是复用上次框选的区域。</param>
+    Public Sub StartRecording(Optional Auto As Boolean = False, Optional Region As GameArea? = Nothing)
         If IsRecording OrElse Stopping Then Return
         EnsureFolder()
 
-        '录制区域
+        '录制区域：显式传入的区域优先（Alt + 1 区域录制）
         Dim GameWindow As IntPtr = GetGameWindow()
-        Dim Area As GameArea? = Nothing
-        If Settings.Get(Of Integer)("VideoMode") = 1 Then
-            If GameWindow <> IntPtr.Zero Then
-                Area = GetWindowArea(GameWindow)
-            Else
-                Hint("没有找到正在运行的游戏窗口，本次改为全屏录制", HintType.Blue, False)
-            End If
+        Dim Mode As Integer = Settings.Get(Of Integer)("VideoMode")
+        '区域录制才画红框与计时器；「锁定游戏窗口」不画，免得盖在游戏画面上
+        Dim IsRegion As Boolean = Region.HasValue
+        Dim Area As GameArea? = Region
+        If Not Area.HasValue Then
+            Select Case Mode
+                Case VideoModeGameWindow
+                    If GameWindow <> IntPtr.Zero Then
+                        Area = GetWindowArea(GameWindow)
+                    Else
+                        Hint("没有找到正在运行的游戏窗口，本次改为全屏录制", HintType.Blue, False)
+                    End If
+                Case VideoModeRegion
+                    '录制范围选了「区域」：每次开始录制时重新框一次
+                    IsRegion = True
+                    If Auto Then
+                        '自动录制不该弹全屏浮层抢游戏焦点，没有区域就退回全屏
+                        Hint("自动录制不能框选区域，本次改为全屏录制", HintType.Blue, False)
+                    Else
+                        Dim Picked As GameArea? = WindowRegionSelect.Pick("录制")
+                        If Not Picked.HasValue Then Return
+                        Area = Picked
+                    End If
+            End Select
         End If
         If Area.HasValue AndAlso (Area.Value.Width < 16 OrElse Area.Value.Height < 16) Then Area = Nothing
+        '退回全屏就不是区域录制了，别再画红框
+        If Not Area.HasValue Then IsRegion = False
 
         Dim Left As Integer, Top As Integer, Width As Integer, Height As Integer
         If Area.HasValue Then
@@ -353,6 +453,8 @@ Public Module UltraVideo
 
         '设置先在界面线程读，免得后台线程和设置文件打架
         Dim TargetHeight As Integer = Settings.Get(Of Integer)("VideoHeight")
+        '区域录制按框选原尺寸输出，不放大也不缩小
+        If IsRegion Then TargetHeight = 0
         Dim Fps As Integer = Settings.Get(Of Integer)("VideoFps")
         Dim Bitrate As Integer = Settings.Get(Of Integer)("VideoBitrate")
         Dim Codec As Integer = Settings.Get(Of Integer)("VideoCodec")
@@ -382,9 +484,20 @@ Public Module UltraVideo
                 RecordingFile = OutputFile
                 RecordingStart = Date.Now
                 RecordingAuto = Auto
-                RecordingTarget = If(Area.HasValue, GameWindow, IntPtr.Zero)
+                RecordingIsRegion = IsRegion
+                RecordingTarget = If(Area.HasValue AndAlso Not IsRegion, GameWindow, IntPtr.Zero)
                 RecordingDetail = UltraVideoNative.EncoderName
-                Logger.Info($"开始录制：{OutputFile}（{(If(Area.HasValue, "锁定游戏窗口", "全屏"))}，{RecordingDetail}）")
+                Dim AreaText As String = If(IsRegion, "区域 " & $"{Width}×{Height}",
+                                             If(Area.HasValue, "锁定游戏窗口", "全屏"))
+                Logger.Info($"开始录制：{OutputFile}（{AreaText}，{RecordingDetail}）")
+                If RecordingIsRegion Then
+                    WindowRecordFrame.ShowFrame(Area.Value)
+                Else
+                    '全屏 / 锁定游戏窗口：画面右上角只显示录制时长，靠 WDA 排除不进画面
+                    WindowRecordFrame.ShowTimerOnly(New GameArea With {
+                        .X = Left, .Y = Top, .Width = Width, .Height = Height})
+                End If
+                '提示条已经排除在捕获之外，区域录制也照常弹
                 ShowToast("录制已开始", RecordingTarget)
                 RaiseStatus()
             End Sub)
@@ -405,7 +518,9 @@ Public Module UltraVideo
         RecordingFile = ""
         RecordingTarget = IntPtr.Zero
         RecordingAuto = False
-        '结束也弹一条，和开始时一模一样的动画
+        RecordingIsRegion = False
+        '结束后收掉红框与右上角计时器
+        WindowRecordFrame.HideFrame()
         If Not Silent Then ShowToast("录制已结束", Target)
         RunInNewThread(
         Sub()
@@ -437,6 +552,23 @@ Public Module UltraVideo
         Dispatch(
         Sub()
             If IsRecording Then StopRecording() Else StartRecording()
+        End Sub)
+    End Sub
+
+    ''' <summary>
+    ''' 区域录制快捷键：正在录制就停止；否则先弹出框选浮层，按框出的区域开始录制。
+    ''' 这个键不分「录制范围」设置，永远走框选。
+    ''' </summary>
+    Public Sub ToggleRegionRecording()
+        Dispatch(
+        Sub()
+            If IsRecording Then
+                StopRecording()
+                Return
+            End If
+            Dim Area As GameArea? = WindowRegionSelect.Pick("录制")
+            If Not Area.HasValue Then Return
+            StartRecording(Region:=Area)
         End Sub)
     End Sub
 
@@ -486,7 +618,10 @@ Public Module UltraVideo
         If RecordingFile = "" Then Return
         RecordingFile = ""
         RecordingAuto = False
+        RecordingIsRegion = False
         RecordingTarget = IntPtr.Zero
+        '录制中断了，红框和计时器也得跟着收掉
+        WindowRecordFrame.HideFrame()
         Dim Reason As String = UltraVideoNative.LastError
         Logger.Warn("录制意外结束：" & Reason)
         Dispatch(
@@ -508,6 +643,7 @@ Public Module UltraVideo
     ''' <summary>静音所有录屏提示（程序退出时使用）。</summary>
     Public Sub Mute()
         IsMuted = True
+        WindowRecordFrame.HideFrame()
     End Sub
 
 #End Region
@@ -588,6 +724,37 @@ Public Module UltraVideo
             End If
         Catch ex As Exception
             Logger.Error(ex, "调度录屏操作失败")
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' 是否给浮层加「不参与截屏 / 录屏」。设了环境变量 PCL_FRAME_NO_WDA 就关掉，便于截图验证浮层。
+    ''' </summary>
+    Private UseCaptureExcludeCache As Boolean? = Nothing
+    Public ReadOnly Property UseCaptureExclude As Boolean
+        Get
+            If Not UseCaptureExcludeCache.HasValue Then
+                UseCaptureExcludeCache = (Environment.GetEnvironmentVariable("PCL_FRAME_NO_WDA") Is Nothing)
+            End If
+            Return UseCaptureExcludeCache.Value
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' 标记窗口「不参与截屏 / 录屏」（WDA_EXCLUDEFROMCAPTURE，需要 Win10 2004 以上）。
+    ''' 失败只记一条警告，窗口照常显示。
+    ''' </summary>
+    Public Sub SetWindowCaptureExclude(Win As Window, Exclude As Boolean)
+        If Win Is Nothing Then Return
+        Try
+            Dim Hwnd As IntPtr = New Interop.WindowInteropHelper(Win).Handle
+            If Hwnd = IntPtr.Zero Then Return
+            Dim Affinity As UInteger = If(Exclude, &H11UI, 0UI)
+            If Not Native.SetWindowDisplayAffinity(Hwnd, Affinity) Then
+                Logger.Warn($"设置窗口捕获排除失败（affinity={Affinity}，错误码 {Marshal.GetLastWin32Error()}）")
+            End If
+        Catch ex As Exception
+            Logger.Warn(ex, "设置窗口捕获排除时出错")
         End Try
     End Sub
 
@@ -689,6 +856,10 @@ Public Module UltraVideo
 
         <DllImport("user32.dll")>
         Public Shared Function SetWindowLong(hWnd As IntPtr, nIndex As Integer, dwNewLong As Integer) As Integer
+        End Function
+
+        <DllImport("user32.dll", SetLastError:=True)>
+        Public Shared Function SetWindowDisplayAffinity(hWnd As IntPtr, dwAffinity As UInteger) As Boolean
         End Function
 
     End Class

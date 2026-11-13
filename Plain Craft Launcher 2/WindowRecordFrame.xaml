@@ -1,0 +1,12 @@
+﻿<Window
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Class="WindowRecordFrame"
+    WindowStyle="None" ResizeMode="NoResize" ShowInTaskbar="False" ShowActivated="False"
+    Topmost="True" WindowStartupLocation="Manual" Background="#FFFF3B30"
+    Title="录制区域" Focusable="False">
+    <!-- 这个窗口整块是红色，靠 SetWindowRgn 裁成一个 2px 的空心方框。
+         方框正好落在录制矩形之外，所以既看不见边框被录进去，也不占录制区域。
+         不用 AllowsTransparency：全屏尺寸下那会退回软件渲染。 -->
+    <Grid />
+</Window>
