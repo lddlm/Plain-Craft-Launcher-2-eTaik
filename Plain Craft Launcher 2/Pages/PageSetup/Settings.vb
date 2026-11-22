@@ -164,12 +164,22 @@ Public Class Settings
         New Setting("UltraAnimSpeed", 1, OnChanged:=AddressOf FormMain.UpdateUltraAnimSpeed),
         New Setting("UltraAnimAdvanced", False, OnChanged:=AddressOf FormMain.UpdateUltraAdvanced),
         New Setting("UltraAnimAdvancedLevel", 1, OnChanged:=AddressOf FormMain.UpdateUltraAdvanced),
+        New Setting("UiLauncherNavType", 0), '一级导航栏位置：0 = 顶边栏，1 = 侧边栏
+        New Setting("UltraResourceOutline", False, OnChanged:=Sub() ResourceOutline.RefreshEnabled()), '社区资源分类描边开关
+        New Setting("UltraResourceOutlineColors", ""), '分类描边配色：科技=3B82F6|魔法=8B5CF6|…
+        New Setting("UltraButtonCorner", 3, OnChanged:=Sub() UltraCorner.Refresh()), '按钮圆角
+        New Setting("UltraWindowCorner", 6, OnChanged:=Sub() UltraCorner.Refresh()), '窗口圆角
+        New Setting("UltraButtonHeight", 30, OnChanged:=Sub() UltraCorner.Refresh()), '按钮最小高度：0=不干预
+        New Setting("UltraButtonWidth", 0, OnChanged:=Sub() UltraCorner.Refresh()), '按钮最小宽度：0=不干预
         New Setting("SkinLastFile", ""),
         New Setting("SkinOrder", ""),
         New Setting("SkinLibSource", 0),
         New Setting("MemoryAutoOptimize", False),
         New Setting("MemoryAutoThresholdGb", DefaultMemoryThresholdGb()),
         New Setting("SkinSyncToGame", True),
+        New Setting("CapeLibSource", 0),
+        New Setting("CapeSyncToGame", True),
+        New Setting("CapeLastFile", ""),
         New Setting("UiMusicVolume", 500),
         New Setting("UiMusicStop", False),
         New Setting("UiMusicStart", False),
@@ -209,6 +219,14 @@ Public Class Settings
         New Setting("ScreenshotFormat", 0),
         New Setting("ScreenshotCursor", True),
         New Setting("ScreenshotToast", True),
+        New Setting("ScreenshotClipboard", True),
+        New Setting("HudPosition", 0),
+        New Setting("HudFontPx", 36),
+        New Setting("HudFrameTime", True),
+        New Setting("HudItems", "gpu,vram,ram,fps,low1"),
+        New Setting("HudHotkey", "Alt+E"),
+        New Setting("HudRefresh", 1000),
+        New Setting("HudAutoAttach", True),
         New Setting("VersionAdvanceJvm", "", Source:=Sources.Instance),
         New Setting("VersionAdvanceGame", "", Source:=Sources.Instance),
         New Setting("VersionAdvanceAssets", 0, Source:=Sources.Instance),

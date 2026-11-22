@@ -21,7 +21,7 @@
     ''' <summary>
     ''' 勾选事件改变页面。
     ''' </summary>
-    Private Sub PageCheck(sender As FrameworkElement, e As RouteEventArgs) Handles ItemInstall.Check, ItemMod.Check, ItemPack.Check, ItemResourcePack.Check, ItemShader.Check, ItemDataPack.Check, ItemJava.Check
+    Private Sub PageCheck(sender As FrameworkElement, e As RouteEventArgs) Handles ItemInstall.Check, ItemMod.Check, ItemPack.Check, ItemResourcePack.Check, ItemShader.Check, ItemDataPack.Check, ItemJava.Check, ItemMcMod.Check
         '尚未初始化控件属性时，sender.Tag 为 Nothing，会导致切换到页面 0
         '若使用 IsLoaded，则会导致模拟点击不被执行（模拟点击切换页面时，控件的 IsLoaded 为 False）
         If sender.Tag IsNot Nothing Then PageChange(Val(sender.Tag))
@@ -51,6 +51,9 @@
             Case FormMain.PageSubType.DownloadJava
                 If FrmDownloadJava Is Nothing Then FrmDownloadJava = New PageDownloadJava
                 Return FrmDownloadJava
+            Case FormMain.PageSubType.DownloadMcMod
+                If FrmDownloadMcMod Is Nothing Then FrmDownloadMcMod = New PageDownloadMcMod
+                Return FrmDownloadMcMod
             Case Else
                 Throw New Exception("未知的下载子页面种类：" & ID)
         End Select
@@ -153,6 +156,13 @@
             Case FormMain.PageSubType.DownloadJava
                 If FrmDownloadJava IsNot Nothing Then FrmDownloadJava.RefreshList()
                 ItemJava.Checked = True
+            Case FormMain.PageSubType.DownloadMcMod
+                If FrmDownloadMcMod IsNot Nothing Then
+                    FrmDownloadMcMod.Content.Storage = New ResourceSearcher.SearchResult
+                    FrmDownloadMcMod.Content.Page = 0
+                    FrmDownloadMcMod.PageLoaderRestart()
+                End If
+                ItemMcMod.Checked = True
         End Select
         Hint("正在刷新……", Log:=False)
     End Sub

@@ -1,5 +1,23 @@
 Public Class MyResourceItem
 
+#Region "分类描边"
+
+    '设置分类描边画刷。画刷由 ResourceOutline 共享，颜色改动会自动反映到所有条目；
+    '可见性通过绑定跟随设置开关，无需重新搜索即可实时生效。
+    Public Sub SetOutline(OutlineBrush As Brush)
+        If OutlineBrush Is Nothing Then
+            BorderOutline.Visibility = Visibility.Collapsed
+            Return
+        End If
+        BorderOutline.BorderBrush = OutlineBrush
+        Dim Bind As New Binding("Enabled") With {
+            .Source = ResourceOutline.Instance,
+            .Converter = New System.Windows.Controls.BooleanToVisibilityConverter()}
+        BorderOutline.SetBinding(Border.VisibilityProperty, Bind)
+    End Sub
+
+#End Region
+
 #Region "基础属性"
     Public Uuid As Integer = GetUuid()
 
@@ -73,6 +91,13 @@ Public Class MyResourceItem
         End If
     End Sub
     Private Sub MyResourceItem_Click(sender As MyResourceItem, e As EventArgs) Handles Me.Click
+        'MC 百科词条没有下载与版本信息，直接用浏览器打开百科页面
+        Dim McModProject = TryCast(Tag, ResourceProject)
+        If McModProject IsNot Nothing AndAlso McModProject.Platform = ResourcePlatforms.McMod Then
+            Logger.Info($"打开 MC 百科词条：{McModProject.RawName}")
+            OpenWebsite(McModProject.Website)
+            Return
+        End If
         '记录当前展开的卡片标题（#2712）
         Dim Titles As New List(Of String)
         If FrmMain.PageCurrent.Page = FormMain.PageType.ResourceDetail Then
@@ -104,6 +129,8 @@ Public Class MyResourceItem
                 Case FormMain.PageSubType.DownloadShader
                     TargetType = ResourceTypes.Shader
                     TargetInstance = FrmDownloadShader.Content.Loader.Input.GameVersion
+                Case FormMain.PageSubType.DownloadMcMod
+                    TargetType = ResourceTypes.Mod
             End Select
         Else
             '从详情页进入（查看前置）

@@ -14,7 +14,7 @@ Public Class PageSetupShortcut
         Public Lab As TextBlock
         Public ChangeBtn As MyButton
         Public ResetBtn As MyButton
-        ''' <summary>当前生效的显示文本，例如「Alt + Q」。</summary>
+        ''' <summary>当前生效的显示文本，例如「ALT+Q」。</summary>
         Public ReadText As Func(Of String)
         ''' <summary>按设置重新注册，返回是否抢到了系统热键。</summary>
         Public Apply As Func(Of Boolean)
@@ -51,6 +51,10 @@ Public Class PageSetupShortcut
                LabShotRegionHotkey, BtnShotRegionChange, BtnShotRegionReset,
                Function() UltraScreenshot.RegionHotkeyText,
                Function() UltraScreenshot.ApplyRegionHotkey())
+        AddRow("hud", "UHD 叠加层", "HudHotkey", "Alt+E",
+               LabHudHotkey, BtnHudChange, BtnHudReset,
+               Function() UltraHud.HotkeyText,
+               Function() UltraHud.ApplyHotkey())
     End Sub
 
     Private Sub AddRow(Id As String, Title As String, Key As String, DefaultSpec As String,
@@ -94,6 +98,10 @@ Public Class PageSetupShortcut
 
     Private Sub BtnShotRegionChange_Click() Handles BtnShotRegionChange.Click
         ToggleCapture("shotregion")
+    End Sub
+
+    Private Sub BtnHudChange_Click() Handles BtnHudChange.Click
+        ToggleCapture("hud")
     End Sub
 
     Private Sub ToggleCapture(Id As String)
@@ -185,6 +193,10 @@ Public Class PageSetupShortcut
 
     Private Sub BtnShotRegionReset_Click() Handles BtnShotRegionReset.Click
         ResetRow("shotregion")
+    End Sub
+
+    Private Sub BtnHudReset_Click() Handles BtnHudReset.Click
+        ResetRow("hud")
     End Sub
 
     Private Sub ResetRow(Id As String)

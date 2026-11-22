@@ -260,31 +260,21 @@ NextInner:
             End Sub, "Donate")
         End If
         '正版购买提示
+        'Ultra：永久移除「考虑一下正版？」启动提示（用户要求，任何启动次数都不再弹出）
+        '只保留原版在非中文环境下的离线登录正版校验，中文环境下这一段整体不执行
         If CurrentLaunchOptions?.SaveBatch Is Nothing AndAlso '保存脚本时不提示
-           Not Settings.Get(Of Boolean)("HintBuy") AndAlso Settings.Get(Of McLoginType)("LoginType") <> McLoginType.Ms Then
-            If Globalization.CultureInfo.CurrentCulture.Name.StartsWithF("zh") OrElse Globalization.CultureInfo.CurrentUICulture.Name.StartsWithF("zh") Then '中文？
-                RunInNewThread(
-                Sub()
-                    Select Case Settings.Get(Of Integer)("SystemLaunchCount")
-                        Case 3, 8, 15, 30, 50, 70, 90, 110, 130, 180, 220, 280, 330, 380, 450, 550, 660, 750, 880, 950, 1100, 1300, 1500, 1700, 1900
-                            If MyMsgBox("你已经启动了 " & Settings.Get(Of Integer)("SystemLaunchCount") & " 次 Minecraft 啦！" & vbCrLf &
-                                "如果觉得 Minecraft 还不错，可以购买正版支持一下，毕竟开发游戏也真的很不容易……不要一直白嫖啦。" & vbCrLf & vbCrLf &
-                                "在登录一次正版账号后，就不会再出现这个提示了！",
-                                "考虑一下正版？", "支持正版游戏！", "下次一定") = 1 Then
-                                OpenWebsite("https://www.xbox.com/zh-cn/games/store/minecraft-java-bedrock-edition-for-pc/9nxp44l49shj")
-                            End If
-                    End Select
-                End Sub, "Buy Minecraft")
-            ElseIf Settings.Get(Of McLoginType)("LoginType") = McLoginType.Legacy Then
-                Select Case MyMsgBox("你必须先登录正版账号，才能进行离线登录！", "正版验证", "购买正版", "试玩", "返回",
-                    Button1Action:=Sub() OpenWebsite("https://www.xbox.com/zh-cn/games/store/minecraft-java-bedrock-edition-for-pc/9nxp44l49shj"))
-                    Case 2
-                        Hint("游戏将以试玩模式启动！", HintType.Red)
-                        CurrentLaunchOptions.ExtraGameArgs.Add("--demo")
-                    Case 3
-                        Throw New OperationCanceledException
-                End Select
-            End If
+           Not Settings.Get(Of Boolean)("HintBuy") AndAlso
+           Settings.Get(Of McLoginType)("LoginType") = McLoginType.Legacy AndAlso
+           Not (Globalization.CultureInfo.CurrentCulture.Name.StartsWithF("zh") OrElse
+                Globalization.CultureInfo.CurrentUICulture.Name.StartsWithF("zh")) Then
+            Select Case MyMsgBox("你必须先登录正版账号，才能进行离线登录！", "正版验证", "购买正版", "试玩", "返回",
+                Button1Action:=Sub() OpenWebsite("https://www.xbox.com/zh-cn/games/store/minecraft-java-bedrock-edition-for-pc/9nxp44l49shj"))
+                Case 2
+                    Hint("游戏将以试玩模式启动！", HintType.Red)
+                    CurrentLaunchOptions.ExtraGameArgs.Add("--demo")
+                Case 3
+                    Throw New OperationCanceledException
+            End Select
         End If
     End Sub
 
@@ -2123,6 +2113,10 @@ IgnoreCustomSkin:
         End If
         Loader.Output = GameProcess
         McLaunchProcess = GameProcess
+
+        'Ultra：趁游戏窗口还没建出来，把 UHD 内核挂上去。
+        'LWJGL 是运行时才解析 SwapBuffers 的，窗口建好后就晚了，只能提前动手。
+        UltraHud.AutoAttach(GameProcess)
 
         '进程优先级处理
         Try

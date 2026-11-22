@@ -55,6 +55,7 @@
                             <RowDefinition Height="28" />
                             <RowDefinition Height="14" />
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="6" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
@@ -94,8 +95,11 @@
                         <local:MyCheckBox local:SettingService.Key="ScreenshotCursor" x:Name="CheckCursor"
                                           Grid.Row="6" Grid.ColumnSpan="2" Text="包含鼠标指针" Height="22" Margin="0,6,0,0"
                                           ToolTip="把当前鼠标指针一起画进图片。关掉后截出来的画面更干净。" />
+                        <local:MyCheckBox local:SettingService.Key="ScreenshotClipboard" x:Name="CheckClipboard"
+                                          Grid.Row="7" Grid.ColumnSpan="2" Text="截屏后自动复制到剪贴板" Height="22"
+                                          ToolTip="截完直接 Ctrl+V 就能贴到聊天框、画图或文档里；图片文件照样会存一份。" />
                         <local:MyCheckBox local:SettingService.Key="ScreenshotToast" x:Name="CheckToast"
-                                          Grid.Row="8" Grid.ColumnSpan="2" Text="截屏后显示「已截屏」提示条" Height="22"
+                                          Grid.Row="9" Grid.ColumnSpan="2" Text="截屏后显示「已截屏」提示条" Height="22"
                                           ToolTip="和录制一样的右上角提示条，几秒后自动消失。提示条本身不会被截进图片。" />
                     </Grid>
                 </StackPanel>

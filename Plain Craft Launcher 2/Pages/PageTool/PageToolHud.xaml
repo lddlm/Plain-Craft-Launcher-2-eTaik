@@ -1,0 +1,122 @@
+﻿<local:MyPageRight
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d" x:Class="PageToolHud"
+    PanScroll="PanBack">
+    <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
+        <StackPanel x:Name="PanMain" Margin="25,25,25,10" Grid.IsSharedSizeScope="True">
+
+            <!-- UHD 显示开关与实时状态 -->
+            <local:MyCard Title="UHD 显示" Margin="0,0,0,15">
+                <StackPanel Margin="25,40,25,25">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
+                            <ColumnDefinition Width="1*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="28" />
+                            <RowDefinition Height="6" />
+                            <RowDefinition Height="28" />
+                            <RowDefinition Height="6" />
+                            <RowDefinition Height="28" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="状态" Margin="0,0,25,0" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" x:Name="LabState" Text="未开启" VerticalAlignment="Center"
+                                   Foreground="{StaticResource ColorBrushGray3}" />
+                        <TextBlock Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="当前帧率" Margin="0,0,25,0" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="LabFps" Text="—" VerticalAlignment="Center"
+                                   Foreground="{StaticResource ColorBrushGray3}" />
+                        <TextBlock Grid.Row="4" VerticalAlignment="Center" HorizontalAlignment="Left" Text="渲染分辨率" Margin="0,0,25,0" />
+                        <TextBlock Grid.Row="4" Grid.Column="1" x:Name="LabRes" Text="—" VerticalAlignment="Center"
+                                   Foreground="{StaticResource ColorBrushGray3}" />
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
+                        <local:MyButton x:Name="BtnToggle" Text="显示 HUD" Height="34" Width="132" ColorType="Highlight"
+                                        ToolTipService.ShowOnDisabled="True" />
+                    </StackPanel>
+                    <local:MyCheckBox x:Name="CheckAutoAttach" Text="进游戏就自动挂接内核" Height="22" Margin="0,14,0,0"
+                                      ToolTip="必须赶在游戏创建窗口之前把内核挂上去：&#xa;LWJGL 是运行时才解析换页函数的，窗口建好之后就挂不上了。&#xa;关掉的话只能进游戏后手动点「显示 UHD」，第一次很可能挂不上，需要重进一次游戏。" />
+                    <TextBlock x:Name="LabTip" Text="" Margin="0,13,0,0" FontSize="12.5" LineHeight="18" TextWrapping="Wrap"
+                               Foreground="{StaticResource ColorBrushGray3}" />
+                </StackPanel>
+            </local:MyCard>
+
+            <!-- HUD 外观 -->
+            <local:MyCard Title="HUD 设置" Margin="0,0,0,15">
+                <StackPanel Margin="25,40,25,25">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
+                            <ColumnDefinition Width="1*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="28" />
+                            <RowDefinition Height="9" />
+                            <RowDefinition Height="28" />
+                            <RowDefinition Height="9" />
+                            <RowDefinition Height="28" />
+                            <RowDefinition Height="9" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="显示位置" Margin="0,0,25,0" />
+                        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <local:MyRadioBox local:SettingService.Key="HudPosition" local:SettingService.Value="0"
+                                              x:Name="RadioLeftTop" Text="左上" Height="22" VerticalAlignment="Center" />
+                            <local:MyRadioBox local:SettingService.Key="HudPosition" local:SettingService.Value="1"
+                                              x:Name="RadioRightTop" Text="右上" Height="22" Margin="32,0,0,0" VerticalAlignment="Center" />
+                            <local:MyRadioBox local:SettingService.Key="HudPosition" local:SettingService.Value="2"
+                                              x:Name="RadioLeftBottom" Text="左下" Height="22" Margin="32,0,0,0" VerticalAlignment="Center" />
+                            <local:MyRadioBox local:SettingService.Key="HudPosition" local:SettingService.Value="3"
+                                              x:Name="RadioRightBottom" Text="右下" Height="22" Margin="32,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="字号" Margin="0,0,25,0" />
+                        <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <local:MySlider x:Name="SliderSize" Width="240" VerticalAlignment="Center"
+                                            local:SettingService.Key="HudFontPx" MaxValue="72" ValueByKey="2"
+                                            ToolTip="数字高度，按 1080p 分辨率算。&#xa;往右越大，往左越小；拖动时游戏里的 HUD 会跟着变。" />
+                            <TextBlock x:Name="LabSize" Margin="14,0,0,0" VerticalAlignment="Center" MinWidth="52"
+                                       Foreground="{StaticResource ColorBrushGray3}" />
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="刷新间隔" Margin="0,0,25,0" />
+                        <local:MyComboBox local:SettingService.Key="HudRefresh" x:Name="ComboRefresh"
+                                          Grid.Row="4" Grid.Column="1" ToolTip="数值多久统计一次。1 秒跟得上手感，3 秒更稳。">
+                            <local:MyComboBoxItem Content="1 秒（跟手）" local:SettingService.Value="1000" />
+                            <local:MyComboBoxItem Content="3 秒（更稳）" local:SettingService.Value="3000" />
+                        </local:MyComboBox>
+
+                        <TextBlock Grid.Row="6" Grid.ColumnSpan="2" Text="显示项目" Margin="0,0,0,8" VerticalAlignment="Center" />
+                        <StackPanel Grid.Row="7" Grid.ColumnSpan="2">
+                            <WrapPanel>
+                                <local:MyCheckBox x:Name="CheckItemGpu" Text="GPU 使用率" Height="22" Margin="0,0,22,4"
+                                                  ToolTip="显卡 3D 引擎的占用率，和任务管理器里那个数一样。&#xa;来自 Windows 自带的 GPU 性能计数器，每 3 秒读一次。" />
+                                <local:MyCheckBox x:Name="CheckItemVram" Text="显存" Height="22" Margin="0,0,22,4"
+                                                  ToolTip="显存占用。不到 1 GB 显示 MB，超过就显示 GB。" />
+                                <local:MyCheckBox x:Name="CheckItemRam" Text="内存" Height="22" Margin="0,0,22,4"
+                                                  ToolTip="整机已用物理内存，单位 GB。" />
+                                <local:MyCheckBox x:Name="CheckItemCpu" Text="CPU 使用率" Height="22" Margin="0,0,22,4"
+                                                  ToolTip="整机 CPU 占用率，用系统时间差算的，几乎不占性能。" />
+                            </WrapPanel>
+                            <WrapPanel Margin="0,4,0,0">
+                                <local:MyCheckBox x:Name="CheckItemFps" Text="帧率" Height="22" Margin="0,0,22,4"
+                                                  ToolTip="游戏每秒真正渲染了多少帧，直接数游戏自己的换页次数，不是桌面的合成帧。" />
+                                <local:MyCheckBox x:Name="CheckItemFrameTime" Text="帧时间" Height="22" Margin="0,0,22,4"
+                                                  ToolTip="每帧耗时（ms），单独占一行。默认不显示。" />
+                                <local:MyCheckBox x:Name="CheckItemLow1" Text="1% Low" Height="22" Margin="0,0,22,4"
+                                                  ToolTip="最近 10 秒里最慢的 1% 帧的平均帧率，和微星小飞机 / RTSS 一个口径。&#xa;平均帧率好看但偶尔卡一下时，这个数会掉下来。" />
+                                <local:MyCheckBox x:Name="CheckItemLow01" Text="0.1% Low" Height="22" Margin="0,0,22,4"
+                                                  ToolTip="只取最慢的 0.1% 帧，比 1% Low 更敏感，专抓那种一秒卡一下的顿挫。" />
+                            </WrapPanel>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </local:MyCard>
+
+        </StackPanel>
+    </local:MyScrollViewer>
+</local:MyPageRight>

@@ -60,6 +60,20 @@ Public Class PageResource
     End Property
     Private _Type As ResourceTypes = -1
 
+    ''' <summary>
+    ''' 是否为独立的 MC 百科检索页。为 True 时隐藏来源筛选，并强制只检索 MC 百科。
+    ''' </summary>
+    Public Property McModOnly As Boolean
+        Get
+            Return _McModOnly
+        End Get
+        Set(Value As Boolean)
+            _McModOnly = Value
+            UpdateMcModMode()
+        End Set
+    End Property
+    Private _McModOnly As Boolean = False
+
 #End Region
 
 #Region "加载"
@@ -77,6 +91,7 @@ Public Class PageResource
     Public Loader As LoaderTask(Of ResourceSearcher.SearchRequest, Integer) = ResourceSearcher.GetLoader(AddressOf LoaderInput)
 
     Private Sub PageResource_Loaded(sender As Object, e As EventArgs) Handles Me.Loaded
+        UpdateMcModMode() 'XAML 属性设置时控件可能尚未创建，这里再执行一次
         Static IsFirstLoaded As Boolean = False
         '不知道从 Initialized 改成 Loaded 会不会有问题，但用 Initialized 会导致初始的筛选器修改被覆盖回默认值
         If TargetInstance IsNot Nothing Then
@@ -127,7 +142,8 @@ Public Class PageResource
             .GameVersion = GameVersion
             .Tag = ComboSearchTag.SelectedItem.Tag
             .ModLoaders = If(PageType = ResourceTypes.Mod, Val(ComboSearchLoader.SelectedItem.Tag), ModLoaders.None)
-            .Sources = CType(Val(ComboSearchSource.SelectedItem.Tag), ResourcePlatforms)
+            .Sources = If(McModOnly, ResourcePlatforms.McMod,
+                          CType(Val(ComboSearchSource.SelectedItem.Tag), ResourcePlatforms))
         End With
         Return Request
     End Function
@@ -145,6 +161,16 @@ Public Class PageResource
     Private Sub Load_OnFinish()
         Try
             Logger.Info($"开始可视化{TypeNameSpaced}列表，已储藏 {Storage.Results.Count} 个结果，当前在第 {Page + 1} 页")
+            If Storage.Results.Count = 0 Then
+                '空结果：MC 百科页面首次进入时就是这种状态，显示说明条即可
+                PanProjects.Children.Clear()
+                CardProjects.Visibility = Visibility.Collapsed
+                CardPages.Visibility = Visibility.Collapsed
+                HintError.Visibility = Visibility.Collapsed
+                If McModOnly Then HintMcMod.Visibility = Visibility.Visible
+                Return
+            End If
+            CardProjects.Visibility = Visibility.Visible
             '列表项
             PanProjects.Children.Clear()
             Dim Index As Integer = Math.Min(Page * PAGE_SIZE, Storage.Results.Count - 1)
@@ -254,6 +280,27 @@ Public Class PageResource
             Grid.SetColumnSpan(TextSearchVersion, 2)
             ComboSearchLoader.SelectedIndex = 0
         End If
+    End Sub
+
+    'MC 百科独立页：锁定来源并隐藏不适用的筛选项
+    Private Sub UpdateMcModMode()
+        If HintMcMod Is Nothing Then Return 'XAML 属性设置阶段控件尚未创建
+        HintMcMod.Visibility = If(McModOnly, Visibility.Visible, Visibility.Collapsed)
+        ComboSearchSource.IsEnabled = Not McModOnly
+        TextSearchVersion.IsEnabled = Not McModOnly
+        ComboSearchTag.IsEnabled = Not McModOnly
+        ComboSearchLoader.IsEnabled = Not McModOnly
+        If Not McModOnly Then Return
+        '把来源下拉框收敛为单项，避免误导
+        If ComboSearchSource.Items.Count <> 1 Then
+            ComboSearchSource.Items.Clear()
+            ComboSearchSource.Items.Add(New MyComboBoxItem With {.Content = "MC 百科", .Tag = "4"})
+        End If
+        ComboSearchSource.SelectedIndex = 0
+        '百科词条没有版本与类型信息
+        ComboSearchTag.SelectedIndex = 0
+        TextSearchVersion.SelectedIndex = 0
+        ComboSearchLoader.SelectedIndex = 0
     End Sub
 
 #End Region

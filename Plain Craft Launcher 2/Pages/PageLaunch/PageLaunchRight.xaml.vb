@@ -299,6 +299,7 @@ Public Class PageLaunchRight
     Private Sub SkinUI_Loaded() Handles Me.Loaded
         RefreshSkinUI()
         ApplySavedSkinLibSource()
+        ApplySavedCapeLibSource()
     End Sub
 
     Private _SkinPreviewU As Integer = 0
@@ -365,23 +366,28 @@ Public Class PageLaunchRight
         End If
     End Sub
 
-    ''' <summary>展开皮肤区：皮肤管理 + 皮肤库 两张卡按当前动画体系逐个入场。</summary>
+    ''' <summary>展开皮肤区：皮肤管理 + 披风管理 + 皮肤库 + 披风库 四张卡按当前动画体系逐个入场。</summary>
     Public Sub ShowSkinManager()
         If CardSkin Is Nothing Then Return
         PanBack.ScrollToHome()
         RefreshSkinUI()
+        RefreshCapeUI()
         ShowSkinLibrary()
-        AnimateElementsIn(CardSkin, CardSkinLib)
+        ShowCapeLibrary()
+        AnimateElementsIn(CardSkin, CardCape, CardSkinLib, CardCapeLib)
     End Sub
 
-    ''' <summary>收起皮肤区：两张卡按当前动画体系逐个退场，结束后隐藏。</summary>
+    ''' <summary>收起皮肤区：四张卡按当前动画体系逐个退场，结束后隐藏。</summary>
     Public Sub HideSkinManager()
         If CardSkin Is Nothing Then Return
         If CardSkin.Visibility <> Visibility.Visible Then Return
         SkinLibToken += 1 '让后台还在下载的缩略图停下
+        CapeLibToken += 1 '披风的缩略图也一样停下
         Dim Targets As New List(Of FrameworkElement)
         Targets.Add(CardSkin)
+        If CardCape IsNot Nothing Then Targets.Add(CardCape)
         If CardSkinLib IsNot Nothing Then Targets.Add(CardSkinLib)
+        If CardCapeLib IsNot Nothing Then Targets.Add(CardCapeLib)
         AnimateElementsOut(Targets.ToArray(), Sub() RefreshSkinUI())
     End Sub
 
@@ -729,25 +735,25 @@ Public Class PageLaunchRight
 
     ''' <summary>生成一个皮肤格子（预览图 + 名称，悬停高亮，点击应用）。</summary>
     Private Function BuildSkinLibraryCell(Item As SkinLibraryItem) As Border
-        Dim Img As New Image With {.Height = 94, .Margin = New Thickness(0, 8, 0, 0), .Stretch = Stretch.Uniform}
+        Dim Img As New Image With {.Height = 82, .Margin = New Thickness(0, 6, 0, 0), .Stretch = Stretch.Uniform}
         RenderOptions.SetBitmapScalingMode(Img, BitmapScalingMode.NearestNeighbor)
         Dim Name As New TextBlock With {
-            .Text = Item.Name, .FontSize = 11, .Margin = New Thickness(5, 4, 5, 0),
+            .Text = Item.Name, .FontSize = 11, .Margin = New Thickness(4, 4, 4, 0),
             .TextAlignment = TextAlignment.Center, .TextTrimming = TextTrimming.CharacterEllipsis,
             .Foreground = ResBrush("ColorBrushGray3")}
         Dim Stack As New StackPanel
         Stack.Children.Add(Img)
         Stack.Children.Add(Name)
         Dim Cell As New Border With {
-            .Width = 88, .Height = 124, .Margin = New Thickness(0, 0, 10, 10),
+            .Width = 74, .Height = 106, .Margin = New Thickness(0, 0, 6, 6),
             .CornerRadius = New CornerRadius(6), .Cursor = Cursors.Hand,
-            .BorderThickness = New Thickness(1),
-            .BorderBrush = ResBrush("ColorBrushGray5"),
+            .BorderThickness = New Thickness(0),
+            .Background = Brushes.Transparent,
             .Tag = Img,
             .ToolTip = Item.Name & If(String.IsNullOrEmpty(Item.Author), "", " · " & Item.Author)}
         Cell.Child = Stack
-        AddHandler Cell.MouseEnter, Sub() Cell.BorderBrush = ResBrush("ColorBrush3")
-        AddHandler Cell.MouseLeave, Sub() Cell.BorderBrush = ResBrush("ColorBrushGray5")
+        AddHandler Cell.MouseEnter, Sub() Cell.Background = ResBrush("ColorBrushGray8")
+        AddHandler Cell.MouseLeave, Sub() Cell.Background = Brushes.Transparent
         AddHandler Cell.MouseLeftButtonUp, Sub() ApplyLibrarySkin(Item)
         Return Cell
     End Function
@@ -790,6 +796,460 @@ Public Class PageLaunchRight
         Dim B = TryCast(Application.Current.TryFindResource(Key), Brush)
         Return If(B, Brushes.Transparent)
     End Function
+
+#End Region
+
+
+#Region "披风管理"
+
+    ''' <summary>刷新披风管理卡：预览、状态行、已有披风横排。</summary>
+    Private Sub RefreshCapeUI()
+        If CardCape Is Nothing OrElse LabCapeStatus Is Nothing Then Return
+        Dim Files = ListLocalCapes()
+        Dim Instance = SkinHelper.CurrentInstance()
+
+        '状态行：数量 + Quick Skin 是否就绪
+        If Files.Count = 0 Then
+            LabCapeStatus.Text = "还没有披风，去下面的披风库挑一个"
+        Else
+            Dim Ready As Boolean = Instance IsNot Nothing AndAlso SkinHelper.LoaderOf(Instance) <> "" AndAlso SkinHelper.IsQuickSkinInstalled(Instance)
+            Dim Extra = If(Ready, $" · Quick Skin（{SkinHelper.LoaderOf(Instance)}，游戏 {SkinHelper.GameVersionOf(Instance)}）", "")
+            LabCapeStatus.Text = $"已保存 {Files.Count} 个披风{Extra}"
+        End If
+
+        '预览：优先当前披风，没有就用最新的一个
+        Dim Current = ""
+        Try
+            Current = Settings.Get(Of String)("CapeLastFile")
+        Catch ex As Exception
+            Current = ""
+        End Try
+        If String.IsNullOrEmpty(Current) OrElse Not File.Exists(Current) Then
+            Current = If(Files.Count > 0, Files(0), "")
+        End If
+        If String.IsNullOrEmpty(Current) OrElse Not File.Exists(Current) Then
+            ImgCapePreview.Source = Nothing
+            LabCapeEmpty.Visibility = Visibility.Visible
+        Else
+            Try
+                ImgCapePreview.Source = CapeLibrary.BuildCapePreview(CapeLibrary.LoadCapeImage(Current), 8)
+                LabCapeEmpty.Visibility = Visibility.Collapsed
+            Catch ex As Exception
+                ImgCapePreview.Source = Nothing
+                LabCapeEmpty.Visibility = Visibility.Visible
+            End Try
+        End If
+
+        '已有披风
+        PanCapeLocal.Children.Clear()
+        If Files.Count = 0 Then
+            PanCapeLocalBox.Visibility = Visibility.Collapsed
+            '一个都没有就退出管理模式，免得下次新增披风后还是“点一下就删”
+            If CapeManageMode Then
+                CapeManageMode = False
+                If BtnCapeManage IsNot Nothing Then BtnCapeManage.Text = "管理"
+                If LabCapeLocalHint IsNot Nothing Then LabCapeLocalHint.Text = "已有披风（点一下同步到游戏）"
+            End If
+            Return
+        End If
+        PanCapeLocalBox.Visibility = Visibility.Visible
+        For Each FilePath In Files
+            PanCapeLocal.Children.Add(BuildLocalCapeCell(FilePath, String.Equals(FilePath, Current, StringComparison.OrdinalIgnoreCase)))
+        Next
+    End Sub
+
+    ''' <summary>启动器披风目录里的贴图（按修改时间新→旧）。</summary>
+    Private Function ListLocalCapes() As List(Of String)
+        Dim Folder = CapeLibrary.CapeFolder
+        If Not Directory.Exists(Folder) Then Return New List(Of String)
+        Try
+            Return Directory.GetFiles(Folder, "*.png").OrderByDescending(Function(f) File.GetLastWriteTime(f)).ToList()
+        Catch ex As Exception
+            Return New List(Of String)
+        End Try
+    End Function
+
+    ''' <summary>已有披风的小格子：无边框，点一下就同步进 Quick Skin；管理模式点一下删。</summary>
+    Private Function BuildLocalCapeCell(FilePath As String, IsCurrent As Boolean) As Border
+        Dim Img As New Image With {.Height = 54, .Stretch = Stretch.Uniform}
+        RenderOptions.SetBitmapScalingMode(Img, BitmapScalingMode.NearestNeighbor)
+        Try
+            Img.Source = CapeLibrary.BuildCapePreview(CapeLibrary.LoadCapeImage(FilePath), 4)
+        Catch ex As Exception
+            '坏图就留空
+        End Try
+        Dim Name As New TextBlock With {
+            .Text = Path.GetFileNameWithoutExtension(FilePath), .FontSize = 10,
+            .Margin = New Thickness(4, 3, 4, 0), .TextAlignment = TextAlignment.Center,
+            .TextTrimming = TextTrimming.CharacterEllipsis,
+            .Foreground = ResBrush("ColorBrushGray3")}
+        Dim Stack As New StackPanel
+        Stack.Children.Add(Img)
+        Stack.Children.Add(Name)
+        Dim Cell As New Border With {
+            .Width = 62, .Padding = New Thickness(0, 6, 0, 4), .Margin = New Thickness(0, 0, 6, 0),
+            .CornerRadius = New CornerRadius(6), .Cursor = Cursors.Hand,
+            .BorderThickness = New Thickness(0),
+            .Background = If(IsCurrent, ResBrush("ColorBrushGray7"), Brushes.Transparent),
+            .Child = Stack,
+            .ToolTip = If(CapeManageMode, "点一下删除这个披风",
+                          Path.GetFileNameWithoutExtension(FilePath) & " · 点一下同步到游戏")}
+        AddHandler Cell.MouseEnter, Sub() Cell.Background = ResBrush("ColorBrushGray8")
+        AddHandler Cell.MouseLeave, Sub() Cell.Background = If(IsCurrent, ResBrush("ColorBrushGray7"), Brushes.Transparent)
+        AddHandler Cell.MouseLeftButtonUp,
+            Sub()
+                If CapeManageMode Then
+                    DeleteLocalCape(FilePath)
+                Else
+                    ApplyLocalCape(FilePath)
+                End If
+            End Sub
+        Return Cell
+    End Function
+
+    ''' <summary>点已有披风：记为当前 + 同步进 Quick Skin。</summary>
+    Private Sub ApplyLocalCape(FilePath As String)
+        If String.IsNullOrEmpty(FilePath) OrElse Not File.Exists(FilePath) Then Return
+        Settings.Set("CapeLastFile", FilePath)
+        Dim Name = Path.GetFileNameWithoutExtension(FilePath)
+        Dim Instance = SkinHelper.CurrentInstance()
+        If Instance Is Nothing Then
+            Hint($"{Name} 已设为当前披风", HintType.Green, False)
+        ElseIf SkinHelper.LoaderOf(Instance) = "" Then
+            Hint("当前版本不是模组加载器，披风只留在启动器里", HintType.Blue)
+        ElseIf Not SkinHelper.IsQuickSkinInstalled(Instance) Then
+            Hint("同步到游戏需要 Quick Skin，从下面的披风库点一个会自动提示安装", HintType.Blue)
+        Else
+            Try
+                CapeLibrary.SyncCapeFileToGame(FilePath, Name, Instance)
+                Hint($"{Name} 已同步到游戏", HintType.Green, False)
+            Catch ex As Exception
+                Hint("同步失败：" & ex.Message, HintType.Red)
+            End Try
+        End If
+        RefreshCapeUI()
+    End Sub
+
+    Private Sub BtnCapeFolder_Click(sender As Object, e As EventArgs) Handles BtnCapeFolder.Click
+        Try
+            DirectoryUtils.Create(CapeLibrary.CapeFolder)
+            OpenExplorer(CapeLibrary.CapeFolder)
+        Catch ex As Exception
+            Hint("打开披风文件夹失败：" & ex.Message, HintType.Red)
+        End Try
+    End Sub
+
+    ''' <summary>披风管理开关：打开后点格子就是删除（会再确认一次）。</summary>
+    Private CapeManageMode As Boolean = False
+
+    Private Sub BtnCapeManage_Click(sender As Object, e As EventArgs) Handles BtnCapeManage.Click
+        CapeManageMode = Not CapeManageMode
+        BtnCapeManage.Text = If(CapeManageMode, "完成", "管理")
+        LabCapeLocalHint.Text = If(CapeManageMode, "管理披风：点一下删除（会再确认一次）", "已有披风（点一下同步到游戏）")
+        RefreshCapeUI()
+    End Sub
+
+    ''' <summary>删除某个已有披风；删的是当前披风时顺便清空选择。</summary>
+    Private Sub DeleteLocalCape(FilePath As String)
+        If String.IsNullOrEmpty(FilePath) OrElse Not File.Exists(FilePath) Then Return
+        Dim Name = Path.GetFileNameWithoutExtension(FilePath)
+        If MyMsgBox("要删除披风「" & Name & "」吗？" & vbCrLf & "文件会被永久删除，无法恢复。",
+                    "删除披风", "删除", "取消", IsWarn:=True) <> 1 Then Return
+        Try
+            File.Delete(FilePath)
+        Catch ex As Exception
+            Hint("删除失败：" & ex.Message, HintType.Red)
+            Return
+        End Try
+        Try
+            If String.Equals(Settings.Get(Of String)("CapeLastFile"), FilePath, StringComparison.OrdinalIgnoreCase) Then
+                Settings.Set("CapeLastFile", "")
+            End If
+        Catch ex As Exception
+            '设置读不到不影响删除
+        End Try
+        RefreshCapeUI()
+        Hint($"已删除披风「{Name}」", HintType.Green, False)
+    End Sub
+
+    Private Sub BtnCapeClose_Click(sender As Object, e As EventArgs) Handles BtnCapeClose.Click
+        HideSkinManager()
+    End Sub
+
+#End Region
+
+
+#Region "披风库"
+
+    ''' <summary>当前披风源：Laby.net（0，能拿到贴图）/ NameMC（1，只有渲染图）。</summary>
+    Private CapeLibSource As Integer = CapeLibrary.SourceLaby
+    ''' <summary>切换来源 / 收起卡片时自增，用来让后台还在跑的下载停下。</summary>
+    Private CapeLibToken As Integer = 0
+    Private CapeLibStatusText As String = ""
+    Private CapeLibLoading As Boolean = False
+
+    ''' <summary>载入时恢复上次选的披风源与同步开关。</summary>
+    Private Sub ApplySavedCapeLibSource()
+        Try
+            CapeLibSource = Math.Max(0, Math.Min(1, Settings.Get(Of Integer)("CapeLibSource")))
+        Catch ex As Exception
+            CapeLibSource = CapeLibrary.SourceLaby
+        End Try
+        AniControlEnabled += 1
+        Try
+            If CapeLibSource = CapeLibrary.SourceNameMC Then
+                RadioCapeNameMC.Checked = True
+            Else
+                RadioCapeLaby.Checked = True
+            End If
+            '默认同步；用户手动关掉就记住
+            Try
+                CheckCapeSync.Checked = Settings.Get(Of Boolean)("CapeSyncToGame")
+            Catch ex As Exception
+                CheckCapeSync.Checked = True
+            End Try
+        Finally
+            AniControlEnabled -= 1
+        End Try
+    End Sub
+
+    ''' <summary>展开披风库卡片（首次展开时自动拉取）。</summary>
+    Public Sub ShowCapeLibrary()
+        If CardCapeLib Is Nothing Then Return
+        If PanCapeLibList.Children.Count = 0 Then LoadCapeLibrary()
+    End Sub
+
+    ''' <summary>拉取当前来源的全部披风。</summary>
+    Private Sub LoadCapeLibrary()
+        If PanCapeLibList Is Nothing Then Return
+        Dim Token = CapeLibToken + 1
+        CapeLibToken = Token
+        CapeLibLoading = True
+        PanCapeLibList.Children.Clear()
+        LabCapeLibStatus.Text = "正在加载…"
+        Dim Source = CapeLibSource
+        RunInNewThread(
+        Sub()
+            Try
+                Dim Result = CapeLibrary.FetchCapes(Source)
+                RunInUi(
+                Sub()
+                    If Token <> CapeLibToken Then Return
+                    RenderCapeLibrary(Result, Token)
+                End Sub)
+            Catch ex As Exception
+                RunInUi(
+                Sub()
+                    If Token <> CapeLibToken Then Return
+                    CapeLibLoading = False
+                    LabCapeLibStatus.Text = "加载失败：" & ex.Message
+                End Sub)
+            End Try
+        End Sub, "CapeLibrary List")
+    End Sub
+
+    ''' <summary>渲染整页：先摆占位格子，再在后台逐张下载预览图。</summary>
+    Private Sub RenderCapeLibrary(Result As CapeLibraryResult, Token As Integer)
+        PanCapeLibList.Children.Clear()
+        CapeLibLoading = False
+        CapeLibStatusText = $"共 {Result.Items.Count} 个披风"
+        LabCapeLibStatus.Text = CapeLibStatusText
+        If Result.Items.Count = 0 Then
+            LabCapeLibStatus.Text = "没有拿到披风，稍后点「刷新」再试"
+            Return
+        End If
+        For Each Item In Result.Items
+            PanCapeLibList.Children.Add(BuildCapeLibraryCell(Item))
+        Next
+        AnimateCellsIn(PanCapeLibList, "PageLaunchRight CapeCells")
+        '4 个线程分头下预览图，拿到一张就点亮一个格子
+        For Worker As Integer = 0 To 3
+            Dim Start = Worker
+            RunInNewThread(
+            Sub()
+                For i = Start To Result.Items.Count - 1 Step 4
+                    If Token <> CapeLibToken Then Exit For
+                    Try
+                        Dim LocalPath = CapeLibrary.DownloadCapePreview(Result.Items(i))
+                        Dim Bmp = CapeLibrary.LoadCapeImage(LocalPath)
+                        Dim Index = i
+                        RunInUi(
+                        Sub()
+                            If Token <> CapeLibToken Then Return
+                            If Index >= PanCapeLibList.Children.Count Then Return
+                            Dim Cell = TryCast(PanCapeLibList.Children(Index), Border)
+                            If Cell Is Nothing Then Return
+                            Dim Img = TryCast(Cell.Tag, Image)
+                            If Img IsNot Nothing Then Img.Source = Bmp
+                        End Sub)
+                    Catch ex As Exception
+                        '单张失败就留空，不影响其它
+                    End Try
+                Next
+            End Sub, "CapeLibrary Thumb")
+        Next
+    End Sub
+
+    ''' <summary>生成一个披风格子（渲染图 + 名称，悬停高亮，点击导入）。</summary>
+    Private Function BuildCapeLibraryCell(Item As CapeLibraryItem) As Border
+        Dim Img As New Image With {.Height = 92, .Margin = New Thickness(0, 6, 0, 0), .Stretch = Stretch.Uniform}
+        Dim Name As New TextBlock With {
+            .Text = Item.Name, .FontSize = 11, .Margin = New Thickness(4, 5, 4, 0),
+            .TextAlignment = TextAlignment.Center, .TextTrimming = TextTrimming.CharacterEllipsis,
+            .Foreground = ResBrush("ColorBrushGray3")}
+        Dim Stack As New StackPanel
+        Stack.Children.Add(Img)
+        Stack.Children.Add(Name)
+        Dim Tip As String = Item.Name
+        If Item.Owners > 0 Then Tip &= $" · {Item.Owners:N0} 人拥有"
+        Tip &= If(String.IsNullOrEmpty(Item.TextureUrl), " · 只有预览图", " · 点击导入") & " · 右键打开网页"
+        Dim Cell As New Border With {
+            .Width = 74, .Height = 118, .Margin = New Thickness(0, 0, 6, 6),
+            .CornerRadius = New CornerRadius(6), .Cursor = Cursors.Hand,
+            .BorderThickness = New Thickness(0),
+            .Background = Brushes.Transparent,
+            .Tag = Img,
+            .ToolTip = Tip}
+        '右键：保存 / 打开网页
+        Dim Menu As New ContextMenu
+        Dim ItemOpen As New MyMenuItem With {.Header = "在浏览器打开", .Padding = New Thickness(0, 2, 0, 2)}
+        AddHandler ItemOpen.Click, Sub() OpenWebsite(Item.PageUrl)
+        Menu.Items.Add(ItemOpen)
+        Cell.ContextMenu = Menu
+        Cell.Child = Stack
+        AddHandler Cell.MouseEnter, Sub() Cell.Background = ResBrush("ColorBrushGray8")
+        AddHandler Cell.MouseLeave, Sub() Cell.Background = Brushes.Transparent
+        AddHandler Cell.MouseLeftButtonUp, Sub() ApplyLibraryCape(Item)
+        Return Cell
+    End Function
+
+    ''' <summary>把状态行恢复成「共 N 个披风」，用于临时提示之后复位。</summary>
+    Private Sub ResetCapeLibStatus()
+        If LabCapeLibStatus Is Nothing OrElse String.IsNullOrEmpty(CapeLibStatusText) Then Return
+        LabCapeLibStatus.Text = CapeLibStatusText
+    End Sub
+
+    ''' <summary>选中披风库里的一款：下载贴图 → 保存 → 按需同步进 Quick Skin。</summary>
+    Private Sub ApplyLibraryCape(Item As CapeLibraryItem)
+        If Item Is Nothing Then Return
+        LabCapeLibStatus.Text = $"正在下载「{Item.Name}」…"
+        RunInNewThread(
+        Sub()
+            Dim TexPath As String = Nothing
+            Dim ErrText As String = ""
+            If Not String.IsNullOrEmpty(Item.TextureUrl) Then
+                Try
+                    TexPath = CapeLibrary.DownloadCapeTexture(Item)
+                Catch ex As Exception
+                    ErrText = ex.Message
+                    Logger.Warn(ex, "下载披风贴图失败：" & Item.Name)
+                End Try
+            Else
+                ErrText = "来源没有提供原始贴图"
+            End If
+            RunInUi(
+            Sub()
+                If TexPath IsNot Nothing Then
+                    ImportCapeFlow(Item, TexPath)
+                Else
+                    SaveCapePreviewOnly(Item, ErrText)
+                End If
+            End Sub)
+        End Sub, "CapeLibrary Apply")
+    End Sub
+
+    ''' <summary>没有原始贴图时退一步：只把渲染图存到披风目录。</summary>
+    Private Sub SaveCapePreviewOnly(Item As CapeLibraryItem, Reason As String)
+        RunInNewThread(
+        Sub()
+            Try
+                Dim Prev = CapeLibrary.DownloadCapePreview(Item)
+                Dim Saved = CapeLibrary.SaveCapeFile(Prev, Item)
+                RunInUi(
+                Sub()
+                    ResetCapeLibStatus()
+                    Hint($"「{Item.Name}」只拿到预览图（{Reason}），已存到 PCL\Capes", HintType.Blue, False)
+                End Sub)
+            Catch ex As Exception
+                RunInUi(
+                Sub()
+                    ResetCapeLibStatus()
+                    Hint("保存披风预览图失败：" & ex.Message, HintType.Red)
+                End Sub)
+            End Try
+        End Sub, "CapeLibrary Preview")
+    End Sub
+
+    ''' <summary>贴图已到本地：先保存，再按勾选与模组状态决定是否同步进 Quick Skin。</summary>
+    Private Sub ImportCapeFlow(Item As CapeLibraryItem, TexPath As String)
+        Dim Instance = SkinHelper.CurrentInstance()
+        Dim Sync As Boolean = CheckCapeSync.Checked
+        If Sync AndAlso Instance IsNot Nothing Then
+            If SkinHelper.LoaderOf(Instance) = "" Then
+                Hint("当前版本不是模组加载器，披风只会保存到启动器", HintType.Blue)
+                Sync = False
+            ElseIf Not SkinHelper.IsQuickSkinInstalled(Instance) Then
+                If MyMsgBox("同步到游戏需要 Quick Skin 模组，当前版本还没安装。" & vbCrLf &
+                            "现在自动安装吗？（支持 Fabric / Forge / NeoForge）", "缺少 Quick Skin", "自动安装", "只保存不安装") = 1 Then
+                    Hint("正在安装 Quick Skin，请稍候…", HintType.Blue, False)
+                    SkinHelper.InstallQuickSkin(Instance,
+                    Sub(Ok As Boolean, Message As String)
+                        Hint(Message, If(Ok, HintType.Green, HintType.Red), Ok)
+                        If Ok Then
+                            FinishCapeImport(Item, TexPath, Instance, True)
+                        Else
+                            ResetCapeLibStatus()
+                        End If
+                    End Sub)
+                    Return
+                End If
+                Sync = False
+            End If
+        ElseIf Instance Is Nothing Then
+            Sync = False
+        End If
+        FinishCapeImport(Item, TexPath, Instance, Sync)
+    End Sub
+
+    Private Sub FinishCapeImport(Item As CapeLibraryItem, TexPath As String, Instance As McInstance, Sync As Boolean)
+        Try
+            Dim Target = CapeLibrary.SaveCapeFile(TexPath, Item)
+            If Sync Then CapeLibrary.SyncCapeToQuickSkin(Target, Item, Instance)
+            Settings.Set("CapeLastFile", Target)
+            RefreshCapeUI()
+            ResetCapeLibStatus()
+            Hint(If(Sync,
+                    $"「{Item.Name}」已保存并同步到游戏，进游戏在披风菜单里选它",
+                    $"「{Item.Name}」已保存到 PCL\Capes"),
+                 HintType.Green, False)
+        Catch ex As Exception
+            ResetCapeLibStatus()
+            Hint("保存披风失败：" & ex.Message, HintType.Red)
+        End Try
+    End Sub
+
+    Private Sub BtnCapeLibRefresh_Click(sender As Object, e As EventArgs) Handles BtnCapeLibRefresh.Click
+        If CapeLibLoading Then Return
+        LoadCapeLibrary()
+    End Sub
+
+    Private Sub BtnCapeLibSite_Click(sender As Object, e As EventArgs) Handles BtnCapeLibSite.Click
+        OpenWebsite(If(CapeLibSource = CapeLibrary.SourceNameMC, "https://zh-cn.namemc.com/capes", "https://laby.net/zh/capes"))
+    End Sub
+
+    Private Sub ChangeCapeLibSource(sender As Object, raiseByMouse As Boolean) Handles RadioCapeLaby.Check, RadioCapeNameMC.Check
+        If Not raiseByMouse Then Return
+        Dim Btn = TryCast(sender, MyRadioButton)
+        If Btn Is Nothing Then Return
+        CapeLibSource = If(Btn Is RadioCapeNameMC, CapeLibrary.SourceNameMC, CapeLibrary.SourceLaby)
+        Settings.Set("CapeLibSource", CapeLibSource)
+        LoadCapeLibrary()
+    End Sub
+
+    Private Sub CheckCapeSync_Change(sender As Object, user As Boolean) Handles CheckCapeSync.Change
+        If AniControlEnabled <> 0 Then Return
+        Settings.Set("CapeSyncToGame", CheckCapeSync.Checked)
+    End Sub
 
 #End Region
 

@@ -66,6 +66,56 @@
                     </Grid>
                 </Grid>
             </local:MyCard>
+            <!-- 披风管理：和皮肤管理同一套结构，贴在它下面 -->
+            <local:MyCard x:Name="CardCape" Margin="0,0,0,15" Title="披风管理" Visibility="Collapsed">
+                <Grid Margin="25,40,25,20">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="1*" />
+                        </Grid.ColumnDefinitions>
+                        <Border Width="92" Height="92" CornerRadius="6" ClipToBounds="True"
+                                Background="{DynamicResource ColorBrushGray7}" BorderThickness="0">
+                            <Grid>
+                                <TextBlock x:Name="LabCapeEmpty" Text="无预览" FontSize="12" HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" Foreground="{StaticResource ColorBrushGray3}" />
+                                <Image x:Name="ImgCapePreview" Stretch="Uniform"
+                                       RenderOptions.BitmapScalingMode="NearestNeighbor" />
+                            </Grid>
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="18,0,0,0">
+                            <TextBlock x:Name="LabCapeStatus" FontSize="13" TextWrapping="Wrap"
+                                       Foreground="{StaticResource ColorBrushGray3}" />
+                            <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                                <local:MyButton x:Name="BtnCapeFolder" Text="打开披风文件夹" Height="30" Padding="12,5"
+                                                ColorType="Highlight" Margin="0,0,10,0" />
+                                <local:MyButton x:Name="BtnCapeClose" Text="收起" Height="30" Padding="12,5" />
+                            </StackPanel>
+                        </StackPanel>
+                        <StackPanel x:Name="PanCapeLocalBox" Grid.Row="1" Grid.ColumnSpan="2" Margin="0,16,0,0"
+                                    Visibility="Collapsed">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock x:Name="LabCapeLocalHint" Text="已有披风（点一下同步到游戏）" FontSize="12"
+                                           VerticalAlignment="Center" Foreground="{StaticResource ColorBrushGray3}" />
+                                <local:MyButton x:Name="BtnCapeManage" Grid.Column="1" Text="管理" Height="26"
+                                                Padding="14,0" VerticalAlignment="Center" />
+                            </Grid>
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
+                                          Margin="0,8,0,0">
+                                <StackPanel x:Name="PanCapeLocal" Orientation="Horizontal" />
+                            </ScrollViewer>
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </local:MyCard>
             <!-- 皮肤库：独立一张卡片，直接挂在皮肤管理下面 -->
             <local:MyCard x:Name="CardSkinLib" Margin="0,0,0,15" Title="皮肤库" Visibility="Collapsed">
                 <Grid Margin="25,40,25,20">
@@ -125,6 +175,51 @@
                             <TextBlock x:Name="LabSkinLibPage" Grid.Column="1" FontSize="12" HorizontalAlignment="Center"
                                        VerticalAlignment="Center" Foreground="{StaticResource ColorBrushGray3}" Text="第 1 / 1 页" />
                             <local:MyButton x:Name="BtnSkinLibNext" Grid.Column="2" Text="下一页" Height="30" Padding="16,0" />
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </local:MyCard>
+            <!-- 披风库：挂在皮肤库下面，数据来自 Laby.net 与 NameMC -->
+            <local:MyCard x:Name="CardCapeLib" Margin="0,0,0,15" Title="披风库" Visibility="Collapsed">
+                <Grid Margin="25,40,25,20">
+                    <Grid x:Name="PanCapeLib">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="1*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                <TextBlock Text="来源：" FontSize="12" VerticalAlignment="Center"
+                                           Foreground="{StaticResource ColorBrushGray3}" />
+                                <local:MyRadioButton x:Name="RadioCapeLaby" Text="Laby.net" ColorType="Highlight"
+                                                     Checked="True" Margin="0,0,4,0" />
+                                <local:MyRadioButton x:Name="RadioCapeNameMC" Text="NameMC" ColorType="Highlight" />
+                            </StackPanel>
+                            <TextBlock x:Name="LabCapeLibStatus" Grid.Column="1" FontSize="11" Margin="10,0,0,0"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                                       Foreground="{StaticResource ColorBrushGray3}" Text="正在加载…" />
+                        </Grid>
+                        <ScrollViewer Grid.Row="1" Height="360" Margin="0,10,0,0"
+                                      VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <WrapPanel x:Name="PanCapeLibList" />
+                        </ScrollViewer>
+                        <Grid Grid.Row="2" Margin="0,6,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <local:MyCheckBox x:Name="CheckCapeSync" Grid.Column="0" Height="22" VerticalAlignment="Center"
+                                              Text="同步到游戏（需要 Quick Skin）" />
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <local:MyButton x:Name="BtnCapeLibRefresh" Text="刷新" Height="30" Padding="14,0"
+                                                Margin="0,0,10,0" />
+                                <local:MyButton x:Name="BtnCapeLibSite" Text="打开披风网站" Height="30" Padding="14,0" />
+                            </StackPanel>
                         </Grid>
                     </Grid>
                 </Grid>

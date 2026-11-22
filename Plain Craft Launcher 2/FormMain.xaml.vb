@@ -1,5 +1,7 @@
 ﻿Imports System.ComponentModel
+Imports System.Windows.Input
 Imports System.Windows.Interop
+Imports System.Windows.Media
 
 Public Class FormMain
 
@@ -263,6 +265,31 @@ Public Class FormMain
                 BugCount += 10
             End If
         End If
+        If LastVersion < 426 Then 'eTaik 3.4.5
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(6, "新增：存档管理里可给存档改名（仅改显示名称，不改文件夹）"))
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "新增：关于页展示联合开发者，并可前往其主页"))
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：圆角与按钮尺寸卡片支持一键恢复默认"))
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "改进：存档列表封面改为 4:3，详情去掉地形预览，按钮圆角/宽高可全局调节"))
+        End If
+        If LastVersion < 424 Then 'eTaik 3.4.4
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(6, "改进：存档详情改为展开在被点存档的正下方，不再单独占一张卡片"))
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "改进：地图预览换成按种子生成的种子预览图（4:3），不再读取区块数据，没有区块的存档也能出图"))
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "改进：大存档的实体统计改为抽样扫描，几 GB 的世界也不会卡住界面"))
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "修复：存档详情里的目录路径显示为反斜杠加感叹号的问题"))
+        End If
+        If LastVersion < 422 Then 'eTaik 3.4.3
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(6, "新增：版本设置中的「存档管理」页，查看存档名称、封面、种子与对应游戏版本"))
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "新增：存档详情中的地形俯视预览，按 region 区块还原世界样貌"))
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：统计存档的实体、掉落物与方块实体数量"))
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：可删除存档（默认移入回收站）或自定义存档封面"))
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "修复：NBT 数据按大端解析，此前读不到任何真实存档的 level.dat"))
+        End If
+        If LastVersion < 420 Then 'eTaik 3.4.2
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "新增：下载页独立的「MC 百科」检索，可搜索 mcmod.cn 的模组与整合包词条"))
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：社区资源分类描边，可按类型自定义描边颜色"))
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "新增：个性化中可调节按钮圆角与窗口圆角"))
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：资源搜索改为镜像优先与 5 秒超时，不再长时间卡在 30%"))
+        End If
         '整理更新日志文本
         Dim ContentList As New List(Of String)
         Dim SortedFeatures = FeatureList.OrderByDescending(Function(f) f.Key).ToList
@@ -408,6 +435,8 @@ Public Class FormMain
         HwndSource.AddHook(New Interop.HwndSourceHook(AddressOf WndProc))
         UltraVideo.RegisterHotkey(New Interop.WindowInteropHelper(Me).Handle) 'Ultra：Alt + Q 录屏热键
         UltraScreenshot.RegisterHotkey(New Interop.WindowInteropHelper(Me).Handle) 'Ultra：Alt + W 截屏热键
+        UltraHud.RegisterHotkey(New Interop.WindowInteropHelper(Me).Handle) 'Ultra：Alt + H 帧率 HUD 热键
+        ApplyNavLayout(False) 'Ultra：按设置决定一级导航栏在顶边栏还是侧边栏
         AniStart({
             AaCode(Sub() AniControlEnabled -= 1, 50),
             AaOpacity(Me, Settings.Get(Of Integer)("UiLauncherTransparent") / 1000 + 0.4, 250, 100),
@@ -597,6 +626,7 @@ Public Class FormMain
             UltraScreenshot.Mute()
             If UltraVideo.IsRecording Then UltraVideo.StopRecording(Silent:=True)
             WindowVideoToast.CloseToast()
+            UltraHud.Shutdown()
         Catch ex As Exception
             Logger.Warn(ex, "退出时结束录制失败")
         End Try
@@ -671,6 +701,11 @@ Public Class FormMain
     ''' </summary>
     Public IsSizeSaveable As Boolean = False
     Private Sub FormMain_SizeChanged() Handles Me.SizeChanged, Me.Loaded
+        Static CornerApplied As Boolean = False
+        If Not CornerApplied Then
+            CornerApplied = True
+            UltraCorner.Refresh() '启动时应用一次按钮与窗口圆角
+        End If
         If IsSizeSaveable Then
             Settings.Set("WindowHeight", Height)
             Settings.Set("WindowWidth", Width)
@@ -681,6 +716,13 @@ Public Class FormMain
         PanMain.Width = PanForm.Width
         PanMain.Height = Math.Max(0, PanForm.Height - PanTitle.ActualHeight)
         If WindowState = WindowState.Maximized Then WindowState = WindowState.Normal '修复 #1938
+    End Sub
+
+    ''' <summary>设置主窗口四角圆角（通过 BorderForm 的裁剪实现）。</summary>
+    Public Sub ApplyWindowCorner(Radius As Integer)
+        If RectForm Is Nothing Then Return
+        RectForm.RadiusX = Radius
+        RectForm.RadiusY = Radius
     End Sub
 
     '最小化
@@ -1206,6 +1248,7 @@ Public Class FormMain
             'Ultra：Alt + Q 开始 / 结束录制，Alt + W 截屏
             If UltraVideo.OnHotkey(wParam) Then handled = True
             If UltraScreenshot.OnHotkey(wParam) Then handled = True
+            If UltraHud.OnHotkey(wParam) Then handled = True
         ElseIf msg = 400 * 16 + 2 Then
             Logger.Info($"收到置顶信息：{hwnd.ToInt64}")
             If Not IsWindowLoadFinished Then
@@ -1327,6 +1370,7 @@ Public Class FormMain
         DownloadResourcePack = 5
         DownloadShader = 6
         DownloadJava = 7 'Ultra 版 Java 下载页，对应 PageDownloadLeft.PanItem.Children(7)
+        DownloadMcMod = 8 'MC 百科检索页，对应 PageDownloadLeft.PanItem.Children(8)
         SetupLaunch = 0
         SetupLink = 1
         SetupUI = 2
@@ -1339,6 +1383,7 @@ Public Class FormMain
         LinkMain = 0
         ToolRecord = 0 '工具箱：录制，对应 PageToolLeft.PanItem.Children(0)
         ToolScreenshot = 1 '工具箱：截屏，对应 PageToolLeft.PanItem.Children(1)
+        ToolHud = 2 '工具箱：帧率 HUD，对应 PageToolLeft.PanItem.Children(2)
         OtherHelp = 0
         OtherAbout = 1
         OtherTest = 2
@@ -1348,6 +1393,7 @@ Public Class FormMain
         InstanceMod = 3
         InstanceModDisabled = 4
         InstanceExport = 5
+        InstanceSaves = 6
     End Enum
     ''' <summary>
     ''' 获取次级页面的名称。若并非次级页面则返回空字符串，故可以以此判断是否为次级页面。
@@ -1505,8 +1551,10 @@ Public Class FormMain
     ''' 通过点击导航栏改变页面。
     ''' </summary>
     Private Sub BtnTitleSelect_Click(sender As MyRadioButton, raiseByMouse As Boolean) Handles BtnTitleSelect0.Check, BtnTitleSelect1.Check, BtnTitleSelect2.Check, BtnTitleSelect3.Check, BtnTitleSelect4.Check, BtnTitleToolbox.Check
-        If IsChangingPage Then Return
-        PageChangeActual(Val(sender.Tag))
+        If IsChangingPage OrElse IsSyncingNav Then Return
+        Dim Tag As Integer = Val(sender.Tag)
+        SyncNavState(Tag)
+        PageChangeActual(Tag)
     End Sub
     ''' <summary>
     ''' 通过点击返回按钮或手动触发返回来改变页面。
@@ -1517,6 +1565,141 @@ Public Class FormMain
         Else
             PageChange(PageType.Launch)
         End If
+    End Sub
+
+    '一级导航栏（顶边栏 / 侧边栏）
+    ''' <summary>
+    ''' 侧边栏导航的宽度，与二级左栏保持一致。
+    ''' </summary>
+    Private Const NavSideWidth As Double = 152
+    ''' <summary>「切换到顶边栏」图标：外框 + 顶部横条。</summary>
+    '''
+    Private Const NavLogoTop As String = "M3,4 h18 a2,2 0 0 1 2,2 v12 a2,2 0 0 1 -2,2 h-18 a2,2 0 0 1 -2,-2 v-12 a2,2 0 0 1 2,-2 z M5,6 v4 h14 v-4 z"
+    ''' <summary>「切换到侧边栏」图标：外框 + 左侧竖条。</summary>
+    '''
+    Private Const NavLogoSide As String = "M3,4 h18 a2,2 0 0 1 2,2 v12 a2,2 0 0 1 -2,2 h-18 a2,2 0 0 1 -2,-2 v-12 a2,2 0 0 1 2,-2 z M5,6 v12 h5 v-12 z"
+    ''' <summary>正在同步两种导航栏的选中状态，用于避免互相触发。</summary>
+    '''
+    Private IsSyncingNav As Boolean
+
+    ''' <summary>
+    ''' 应用一级导航栏的布局：顶边栏模式下导航按钮留在标题栏；侧边栏模式下把它们移到左侧竖排。
+    ''' </summary>
+    Public Sub ApplyNavLayout(Optional Anime As Boolean = True)
+        ApplyNavLayoutTo(Settings.Get(Of Integer)("UiLauncherNavType") = 1, Anime)
+    End Sub
+    ''' <summary>
+    ''' 按指定的布局应用一级导航栏。IsSide 为 True 表示用侧边栏。
+    ''' </summary>
+    Public Sub ApplyNavLayoutTo(IsSide As Boolean, Optional Anime As Boolean = True)
+        Try
+            Dim Target As Double = If(IsSide, NavSideWidth, 0)
+
+            '切换按钮的图标始终表示「另一种布局」
+            BtnNavToggle.Logo = If(IsSide, NavLogoTop, NavLogoSide)
+            BtnNavToggle.ToolTip = If(IsSide, "切换到顶边栏导航", "切换到侧边栏导航")
+
+            '顶栏导航的显隐
+            AniStop("FrmMain NavTitle")
+            If IsSide Then
+                AniStart({
+                    AaOpacity(PanTitleSelect, -PanTitleSelect.Opacity, 150),
+                    AaCode(Sub() PanTitleSelect.Visibility = Visibility.Collapsed,, True)
+                }, "FrmMain NavTitle")
+            Else
+                PanTitleSelect.Visibility = Visibility.Visible
+                If PanTitleSelect.Opacity < 1 Then
+                    PanTitleSelect.Opacity = 0
+                    AniStart({
+                        AaOpacity(PanTitleSelect, 1, 180, 60)
+                    }, "FrmMain NavTitle")
+                End If
+            End If
+
+            '侧栏宽度
+            If Math.Abs(PanSideNav.Width - Target) < 0.5 AndAlso PanSideNav.Visibility = If(IsSide, Visibility.Visible, Visibility.Collapsed) Then Return
+            AniStop("FrmMain NavSide")
+            '隐藏时必须整块收起来：WPF 的 ClipToBounds 只裁剪渲染，不影响命中测试，
+            '否则收起后的侧栏仍会抢走左侧内容的点击
+            PanSideNav.Visibility = If(IsSide, Visibility.Visible, Visibility.Collapsed)
+            PanSideNav.IsHitTestVisible = False
+            If Not Anime Then
+                PanSideNav.Width = Target
+                RectSideNavBack.Width = Target
+                RectLeftBackground.Margin = New Thickness(Target, 0, 0, 0)
+                PanSideNav.IsHitTestVisible = IsSide
+                Return
+            End If
+            '宽度、背景、边距一起动：全部用原生属性动画，不依赖 lambda 回调
+            Dim Current As Double = PanSideNav.Width
+            Dim CurrentBack As Double = RectSideNavBack.Width
+            Dim CurrentMargin As Double = RectLeftBackground.Margin.Left
+            '注意：集合初始化表达式里不能放多行 lambda，必须先建成 List
+            Dim SideAni As New List(Of AniData)
+            SideAni.Add(AaWidth(PanSideNav, Target - Current, 240, 0, New AniEaseOutFluent))
+            SideAni.Add(AaWidth(RectSideNavBack, Target - CurrentBack, 240, 0, New AniEaseOutFluent))
+            '二级左栏的背景跟着一起右移（AaX 改的就是 Margin.Left）
+            SideAni.Add(AaX(RectLeftBackground, Target - CurrentMargin, 240, 0, New AniEaseOutFluent))
+            SideAni.Add(AaCode(Sub() PanSideNav.IsHitTestVisible = IsSide, , True))
+            SideAni.Add(AaCode(Sub() PanSideNav.Visibility = If(IsSide, Visibility.Visible, Visibility.Collapsed), , True))
+            AniStart(SideAni, "FrmMain NavSide")
+        Catch ex As Exception
+            Logger.Error(ex, "切换导航栏布局失败")
+        End Try
+    End Sub
+    ''' <summary>
+    ''' 同步顶栏按钮与侧栏列表项的选中状态。
+    ''' </summary>
+    Private Sub SyncNavState(Tag As Integer)
+        If IsSyncingNav Then Return
+        IsSyncingNav = True
+        Try
+            '顶栏按钮：按 Tag 找（与 PageChange 里一致，避免硬编码每个按钮）
+            Dim TitleButton As MyRadioButton = Nothing
+            For Each Child As Object In PanTitleSelect.Children
+                If TypeOf Child Is MyRadioButton AndAlso Val(CType(Child, MyRadioButton).Tag) = Tag Then
+                    TitleButton = CType(Child, MyRadioButton)
+                    Exit For
+                End If
+            Next
+            If TitleButton IsNot Nothing Then TitleButton.SetChecked(True, False, True)
+            '侧栏列表项：同样按 Tag 找
+            '注意：XAML 初始化期间（Checked="True" 赋值）本方法就会被调用，
+            '此时侧栏控件还没被 Connect，必须先判空
+            If PanSideNavItems Is Nothing Then Return
+            Dim SideItem As MyListItem = Nothing
+            For Each Child As Object In PanSideNavItems.Children
+                If TypeOf Child Is MyListItem AndAlso Val(CType(Child, MyListItem).Tag) = Tag Then
+                    SideItem = CType(Child, MyListItem)
+                    Exit For
+                End If
+            Next
+            If SideItem IsNot Nothing Then SideItem.SetChecked(True, False, True)
+        Finally
+            IsSyncingNav = False
+        End Try
+    End Sub
+    ''' <summary>点击侧边栏导航项。</summary>
+    '''
+    Private Sub ItemSideNav_Check(sender As MyListItem, e As RouteEventArgs) Handles ItemSideLaunch.Check, ItemSideDownload.Check, ItemSideLink.Check, ItemSideSetup.Check, ItemSideToolbox.Check
+        If IsSyncingNav OrElse IsChangingPage Then Return
+        If sender.Tag Is Nothing Then Return
+        Dim Tag As Integer = Val(sender.Tag)
+        SyncNavState(Tag)
+        PageChangeActual(Tag)
+    End Sub
+    ''' <summary>点击标题栏上的切换按钮：顶边栏与侧边栏互换。</summary>
+    '''
+    Private Sub BtnNavToggle_Click(sender As Object, e As MouseButtonEventArgs) Handles BtnNavToggle.Click
+        Try
+            Dim NewType As Integer = If(Settings.Get(Of Integer)("UiLauncherNavType") = 1, 0, 1)
+            Settings.Set("UiLauncherNavType", NewType)
+            '直接用新值切，不依赖回读（回读可能被实例隔离影响）
+            ApplyNavLayoutTo(NewType = 1, True)
+            Logger.Info("一级导航栏已切换为" & If(NewType = 1, "侧边栏", "顶边栏"))
+        Catch ex As Exception
+            Logger.Error(ex, "切换导航栏位置失败")
+        End Try
     End Sub
 
     '实际处理页面切换

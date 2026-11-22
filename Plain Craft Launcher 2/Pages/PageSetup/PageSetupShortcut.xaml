@@ -22,6 +22,8 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="14" />
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="14" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="录制开关" Margin="0,0,25,0" />
@@ -59,10 +61,19 @@
                             <local:MyButton x:Name="BtnShotRegionChange" Text="修改" Height="30" Padding="16,0" Margin="12,0,0,0" />
                             <local:MyButton x:Name="BtnShotRegionReset" Text="恢复默认" Height="30" Padding="16,0" Margin="10,0,0,0" />
                         </StackPanel>
+
+                        <TextBlock Grid.Row="8" VerticalAlignment="Center" HorizontalAlignment="Left" Text="帧率 HUD" Margin="0,0,25,0" />
+                        <StackPanel Grid.Row="8" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Background="{DynamicResource ColorBrushGray8}" CornerRadius="4" Padding="13,6" MinWidth="132">
+                                <TextBlock x:Name="LabHudHotkey" Text="Alt + H" FontSize="14" HorizontalAlignment="Center" />
+                            </Border>
+                            <local:MyButton x:Name="BtnHudChange" Text="修改" Height="30" Padding="16,0" Margin="12,0,0,0" />
+                            <local:MyButton x:Name="BtnHudReset" Text="恢复默认" Height="30" Padding="16,0" Margin="10,0,0,0" />
+                        </StackPanel>
                     </Grid>
                     <TextBlock x:Name="LabTip" Margin="0,16,0,0" FontSize="12.5" LineHeight="19" TextWrapping="Wrap"
                                Foreground="{StaticResource ColorBrushGray3}"
-                               Text="点「修改」后按下新的组合键，至少要带一个 Alt / Ctrl / Shift。&#xa;「录制开关」「截屏」按当前选中的录制范围 / 截屏范围执行；「区域录制」「区域截屏」不用管范围，按下就框选一次。&#xa;四个快捷键都是全局的，游戏运行时也能用。" />
+                               Text="点「修改」后按下新的组合键，至少要带一个 Alt / Ctrl / Shift。&#xa;「录制开关」「截屏」按当前选中的录制范围 / 截屏范围执行；「区域录制」「区域截屏」不用管范围，按下就框选一次。&#xa;「UHD 叠加层」用来开关画在游戏画面里的帧率浮窗（只在游戏运行时有效，退出游戏自动关闭）。五个快捷键都是全局的，游戏运行时也能用。" />
                 </StackPanel>
             </local:MyCard>
 

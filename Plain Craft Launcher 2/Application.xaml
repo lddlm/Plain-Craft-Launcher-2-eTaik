@@ -66,6 +66,8 @@
             <SolidColorBrush x:Key="ColorBrushBackgroundTransparentSidebar" Color="#F1FFFFFF" />
 <SolidColorBrush x:Key="UltraCardBackground" Color="#F5FFFFFF" />
 <SolidColorBrush x:Key="UltraGlassBackground" Color="#80FFFFFF" />
+            <!-- Ultra 圆角：按钮模板引用此资源，设置页改它会立即生效 -->
+            <CornerRadius x:Key="UltraButtonCorner">3</CornerRadius>
 
             <!-- Window -->
             <Style TargetType="{x:Type Window}" x:Key="MyWindow">

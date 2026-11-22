@@ -3,6 +3,8 @@ Imports System.Drawing.Imaging
 Imports System.IO
 Imports System.Runtime.InteropServices
 Imports System.Threading
+Imports System.Windows.Interop
+Imports System.Windows.Media.Imaging
 Imports System.Windows.Threading
 
 ''' <summary>
@@ -281,6 +283,7 @@ Public Module UltraScreenshot
             Dim Fmt As Integer = Settings.Get(Of Integer)("ScreenshotFormat")
             Dim WithCursor As Boolean = Settings.Get(Of Boolean)("ScreenshotCursor")
             Dim ShowToast As Boolean = Settings.Get(Of Boolean)("ScreenshotToast")
+            Dim CopyToClip As Boolean = Settings.Get(Of Boolean)("ScreenshotClipboard")
 
             Dim X As Integer = 0, Y As Integer = 0
             Dim W As Integer = UltraVideo.ScreenWidth, H As Integer = UltraVideo.ScreenHeight
@@ -329,6 +332,7 @@ Public Module UltraScreenshot
                 Dim Info As String = ""
                 Dim ErrorText As String = ""
                 Dim OutW As Integer = W, OutH As Integer = H
+                Dim ClipImage As BitmapSource = Nothing
                 Try
                     Using Raw As New Bitmap(W, H, PixelFormat.Format32bppArgb)
                         Using G As Graphics = Graphics.FromImage(Raw)
@@ -344,6 +348,8 @@ Public Module UltraScreenshot
                                                    New Bitmap(Raw),
                                                    ScaleImage(Raw, OutW, OutH))
                             SaveImage(Final, OutFile, Fmt)
+                            '顺手转成可跨线程的 WPF 位图，回到界面线程再塞剪贴板
+                            If CopyToClip Then ClipImage = ToBitmapSource(Final)
                         End Using
                     End Using
                     Dim SizeKb As Double = New FileInfo(OutFile).Length / 1024
@@ -362,9 +368,18 @@ Public Module UltraScreenshot
                     LastFile = OutFile
                     LastInfo = Info
                     Logger.Info($"截屏已保存：{OutFile}（{Info}）")
+                    Dim Copied As Boolean = False
+                    If ClipImage IsNot Nothing Then
+                        Try
+                            CopyScreenshotToClipboard(ClipImage)
+                            Copied = True
+                        Catch ex As Exception
+                            Logger.Warn(ex, "复制截屏到剪贴板失败")
+                        End Try
+                    End If
                     If ShowToast AndAlso Not IsMuted Then
                         Try
-                            WindowVideoToast.ShowTip("已截屏", Target, True)
+                            WindowVideoToast.ShowTip(If(Copied, "已截屏并复制", "已截屏"), Target, True)
                         Catch ex As Exception
                             Logger.Error(ex, "显示截屏提示失败")
                         End Try
@@ -412,6 +427,32 @@ Public Module UltraScreenshot
         Else
             Bmp.Save(File, ImageFormat.Png)
         End If
+    End Sub
+
+    ''' <summary>把 GDI 位图转成冻结的 WPF 位图，可以跨线程传着用。</summary>
+    Private Function ToBitmapSource(Bmp As Bitmap) As BitmapSource
+        Dim HBitmap As IntPtr = Bmp.GetHbitmap()
+        Try
+            Dim Source = Imaging.CreateBitmapSourceFromHBitmap(HBitmap, IntPtr.Zero,
+                                                               System.Windows.Int32Rect.Empty,
+                                                               BitmapSizeOptions.FromEmptyOptions())
+            Source.Freeze()
+            Return Source
+        Finally
+            Native.DeleteObject(HBitmap)
+        End Try
+    End Function
+
+    ''' <summary>
+    ''' 把截屏塞进剪贴板。必须在界面线程调用；剪贴板偶尔被别的程序占着，等一下重试一次。
+    ''' </summary>
+    Private Sub CopyScreenshotToClipboard(Img As BitmapSource)
+        Try
+            System.Windows.Clipboard.SetImage(Img)
+        Catch ex As Exception
+            Thread.Sleep(60)
+            System.Windows.Clipboard.SetImage(Img)
+        End Try
     End Sub
 
     ''' <summary>CopyFromScreen 不含鼠标指针，按需补画一个。</summary>

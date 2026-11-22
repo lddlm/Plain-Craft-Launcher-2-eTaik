@@ -306,6 +306,10 @@ Public Class MyPageRight
             Case PageStates.LoaderExit
                 PageState = PageStates.ContentEnter
                 TriggerEnterAnimation(PanContent)
+            Case PageStates.Empty
+                '页面已被 PageOnForceExit 强制清空，这个收尾回调属于迟到事件：
+                '既没有内容需要收尾，也不该再改状态，忽略即可
+                Logger.Trace("页面已强制退出，忽略迟到的 PageOnExitAnimationFinished")
             Case Else
                 Throw New Exception("在状态为 " & PageState.ToString() & " 时触发了 PageOnExitAnimationFinished 事件。")
         End Select

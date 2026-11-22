@@ -23,8 +23,11 @@ Public Class ResourceSearcher
             Get
                 If Tag.StartsWithF("/") OrElse Not Sources.HasFlagF(ResourcePlatforms.CurseForge) Then Storage.CurseForgeTotal = 0
                 If Tag.EndsWithF("/") OrElse Not Sources.HasFlagF(ResourcePlatforms.Modrinth) Then Storage.ModrinthTotal = 0
-                If Storage.CurseForgeTotal = -1 OrElse Storage.ModrinthTotal = -1 Then Return True
-                Return Storage.CurseForgeOffset < Storage.CurseForgeTotal OrElse Storage.ModrinthOffset < Storage.ModrinthTotal
+                If Not Sources.HasFlagF(ResourcePlatforms.McMod) Then Storage.McModTotal = 0
+                If Storage.CurseForgeTotal = -1 OrElse Storage.ModrinthTotal = -1 OrElse Storage.McModTotal = -1 Then Return True
+                Return Storage.CurseForgeOffset < Storage.CurseForgeTotal OrElse
+                       Storage.ModrinthOffset < Storage.ModrinthTotal OrElse
+                       Storage.McModOffset < Storage.McModTotal
             End Get
         End Property
 
@@ -142,6 +145,9 @@ Public Class ResourceSearcher
         Public ModrinthOffset As Integer = 0
         Public ModrinthTotal As Integer = -1
 
+        Public McModOffset As Integer = 0
+        Public McModTotal As Integer = -1
+
         '结果列表
 
         ''' <summary>
@@ -167,6 +173,14 @@ Public Class ResourceSearcher
 
 #Region "前置检查"
 
+        'MC 百科检索必须有关键词。页面首次进入时搜索框为空，直接结束，不报错也不显示「没有搜索结果」
+        If Request.Sources = ResourcePlatforms.McMod AndAlso String.IsNullOrWhiteSpace(Request.SearchText) Then
+            Storage.CurseForgeTotal = 0
+            Storage.ModrinthTotal = 0
+            Storage.McModTotal = 0
+            Return
+        End If
+
         If Storage.Results.Count >= Request.TargetResultCount Then
             Logger.Info($"已有 {Storage.Results.Count} 个结果，多于所需的 {Request.TargetResultCount} 个结果，结束处理")
             Return
@@ -184,6 +198,7 @@ Public Class ResourceSearcher
 #Region "中文搜索"
 
         Dim RawSearchText As String = If(Request.SearchText, "").Trim
+        Dim McModSearchText As String = RawSearchText 'MC 百科检索保留原始大小写
         RawSearchText = RawSearchText.Lower
         Logger.Info($"工程列表搜索原始文本：{RawSearchText}")
         RawSearchText = StrConv(RawSearchText, VbStrConv.SimplifiedChinese) '繁体转简体
@@ -279,7 +294,8 @@ Public Class ResourceSearcher
                 End If
             End If
             '结束
-            If String.IsNullOrEmpty(CurseForgeAltSearchText) AndAlso String.IsNullOrEmpty(ModrinthAltSearchText) AndAlso Not ModrinthSlugs.Any Then
+            If Not Request.Sources.HasFlagF(ResourcePlatforms.McMod) AndAlso
+               String.IsNullOrEmpty(CurseForgeAltSearchText) AndAlso String.IsNullOrEmpty(ModrinthAltSearchText) AndAlso Not ModrinthSlugs.Any Then
                 Throw New Exception(MSG_NO_CHINESE_RESULT)
             End If
         End If
@@ -300,6 +316,8 @@ NextPage:
         '所以，在发起请求时不筛选加载器，然后在返回的结果中自行筛除不是 Forge 的 Mod
         Dim IgnoreModLoaderFilter = Request.ModLoaders = ModLoaders.Forge AndAlso McVersion.VersionToDrop(Request.GameVersion) < 140
         Dim SearchResults As New ConcurrentBag(Of ResourceProject)
+        'MC 百科结果需要保持「模组 / 整合包」交错顺序，ConcurrentBag 是无序的，这里另存一份有序表
+        Dim McModOrdered As List(Of ResourceProject) = Nothing
         Try
 
             'CurseForge 搜索
@@ -312,7 +330,7 @@ NextPage:
                         '获取工程列表
                         Dim CurseForgeUrl As String = Request.GetCurseForgeAddress(If(CurseForgeAltSearchText, RawSearchText), IgnoreModLoaderFilter)
                         Logger.Info($"开始 CurseForge 搜索：{CurseForgeUrl}")
-                        Dim RequestResult As JObject = DlModRequest(CurseForgeUrl)
+                        Dim RequestResult As JObject = DlModRequest(CurseForgeUrl, FastMode:=True)
                         Dim ProjectList As New List(Of ResourceProject)
                         For Each JsonEntry As JObject In RequestResult("data")
                             Dim Project As New ResourceProject(JsonEntry)
@@ -343,7 +361,7 @@ NextPage:
                     Try
                         Dim ModrinthUrl As String = Request.GetModrinthAddress(If(ModrinthAltSearchText, RawSearchText), IgnoreModLoaderFilter)
                         Logger.Info($"开始 Modrinth 搜索：{ModrinthUrl}")
-                        Dim RequestResult As JObject = DlModRequest(ModrinthUrl)
+                        Dim RequestResult As JObject = DlModRequest(ModrinthUrl, FastMode:=True)
                         Dim ProjectList As New List(Of ResourceProject)
                         For Each JsonEntry As JObject In RequestResult("hits")
                             ProjectList.Add(New ResourceProject(JsonEntry))
@@ -372,7 +390,7 @@ NextPage:
                         Dim ModrinthUrl As String = $"https://api.modrinth.com/v2/projects?ids=[""{ModrinthSlugs.Join(""",""")}""]"
                         Logger.Info($"开始 Modrinth 直接获取：{ModrinthUrl}")
                         Dim ProjectList As New List(Of ResourceProject)
-                        For Each JsonEntry As JObject In DlModRequest(ModrinthUrl)
+                        For Each JsonEntry As JObject In DlModRequest(ModrinthUrl, FastMode:=True)
                             Dim Project As New ResourceProject(JsonEntry)
                             '应用筛选
                             If Request.Type <> ResourceTypes.Any AndAlso Not Project.Types.HasFlagF(Request.Type) Then Continue For
@@ -405,12 +423,43 @@ NextPage:
                 End Sub, "Modrinth Get"))
             End If
 
+            'MC 百科搜索
+            If Request.Sources.HasFlagF(ResourcePlatforms.McMod) Then
+                WorkThreads.Add(RunInNewThread(
+                Sub()
+                    Try
+                        If String.IsNullOrWhiteSpace(McModSearchText) Then
+                            '百科检索必须有关键词
+                            Storage.McModTotal = 0
+                        Else
+                            Logger.Info($"开始 MC 百科搜索：{McModSearchText}")
+                            Dim ProjectList = ResourceMcMod.Search(McModSearchText, Request.Type)
+                            '更新结果
+                            McModOrdered = ProjectList
+                            ProjectList.ForEach(Sub(p) SearchResults.Add(p))
+                            Storage.McModOffset += ProjectList.Count
+                            Storage.McModTotal = ProjectList.Count
+                            Logger.Info($"从 MC 百科搜索到了 {ProjectList.Count} 个词条")
+                        End If
+                    Catch ex As Exception
+                        Logger.Warn(ex, "MC 百科搜索失败")
+                        Storage.McModTotal = -1
+                        Errors.Add((ex, ResourcePlatforms.McMod))
+                    End Try
+                    If Task.Progress < 0.75 Then Task.Progress += 0.25 '可能重复加载多页，所以不能直接给够
+                End Sub, "MCMod Search"))
+            End If
+
             '等待线程结束
             For Each Thread In WorkThreads
                 Thread.Join()
                 If Task.IsCanceled Then Return '会自动触发 Finally 以清理线程
             Next
             RawResults = New List(Of ResourceProject)(SearchResults)
+            '恢复 MC 百科的检索顺序（模组 / 整合包交错），避免被 ConcurrentBag 打乱
+            If McModOrdered IsNot Nothing AndAlso McModOrdered.Any Then
+                RawResults = RawResults.OrderBy(Function(p) McModOrdered.IndexOf(p)).ToList()
+            End If
 
             '仅保留兼容 Forge 的 Mod，或老版本中没有标注任何 Mod Loader 的 Mod
             If IgnoreModLoaderFilter Then
@@ -435,7 +484,9 @@ NextPage:
                 End If
             ElseIf Errors.Any() Then
                 '有结果但是有错误
-                If Errors.Any(Function(e) e.Source = ResourcePlatforms.CurseForge) Then
+                If Errors.Any(Function(e) e.Source = ResourcePlatforms.McMod) AndAlso Errors.Count = 1 Then
+                    Storage.ErrorMessage = $"无法连接到 MC 百科（mcmod.cn），因此没有显示 MC 百科词条，搜索结果可能不全。{vbCrLf}请稍后再试，或使用 VPN 改善网络环境。"
+                ElseIf Errors.Any(Function(e) e.Source = ResourcePlatforms.CurseForge) Then
                     Storage.ErrorMessage = $"无法连接到 CurseForge，所以目前仅显示了来自 Modrinth 的内容，搜索结果可能不全。{vbCrLf}请稍后再试，或使用 VPN 改善网络环境。"
                 Else
                     Storage.ErrorMessage = $"无法连接到 Modrinth，所以目前仅显示了来自 CurseForge 的内容，搜索结果可能不全。{vbCrLf}请稍后再试，或使用 VPN 改善网络环境。"
@@ -495,7 +546,12 @@ NextPage:
                     Return 1
             End Select
         End Function
-        If String.IsNullOrEmpty(RawSearchText) Then
+        If Request.Sources = ResourcePlatforms.McMod Then
+            'MC 百科结果已按「模组 / 整合包」交错排好，保持服务端相关度与交错顺序
+            For i = 0 To RealResults.Count - 1
+                Scores(RealResults(i)) = RealResults.Count - i
+            Next
+        ElseIf String.IsNullOrEmpty(RawSearchText) Then
             '如果没有搜索文本，按下载量将结果排序
             For Each Result As ResourceProject In RealResults
                 Scores(Result) = Result.DownloadCount * GetDownloadCountMult(Result)

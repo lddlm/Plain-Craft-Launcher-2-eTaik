@@ -76,7 +76,7 @@ Public Module UltraVideo
 
 #Region "热键"
 
-    ''' <summary>当前录制快捷键的显示文本，例如「Alt + Q」。</summary>
+    ''' <summary>当前录制快捷键的显示文本，例如「ALT+Q」。</summary>
     Public ReadOnly Property HotkeyText As String
         Get
             Return FormatHotkey(HotkeyMods, HotkeyVK)
@@ -98,7 +98,7 @@ Public Module UltraVideo
     End Property
 
     ''' <summary>
-    ''' 在主窗口上注册全局热键（Alt + Z 的老逻辑改成读设置，默认 Alt + Q）。
+    ''' 在主窗口上注册全局热键（Alt + Z 的老逻辑改成读设置，默认 ALT+Q）。
     ''' </summary>
     Public Function RegisterHotkey(Hwnd As IntPtr) As Boolean
         If Hwnd = IntPtr.Zero Then Return False
@@ -337,15 +337,15 @@ Public Module UltraVideo
         Return "Key" & VK
     End Function
 
-    ''' <summary>修饰键 + 虚拟键码拼成显示文本（Alt + Q）。</summary>
+    ''' <summary>修饰键 + 虚拟键码拼成显示文本（ALT+E）。</summary>
     Public Function FormatHotkey(Mods As Integer, VK As Integer) As String
         Dim Parts As New List(Of String)
-        If (Mods And MOD_CONTROL) <> 0 Then Parts.Add("Ctrl")
-        If (Mods And MOD_ALT) <> 0 Then Parts.Add("Alt")
-        If (Mods And MOD_SHIFT) <> 0 Then Parts.Add("Shift")
-        If (Mods And MOD_WIN) <> 0 Then Parts.Add("Win")
-        Parts.Add(VKToKeyName(VK))
-        Return String.Join(" + ", Parts)
+        If (Mods And MOD_CONTROL) <> 0 Then Parts.Add("CTRL")
+        If (Mods And MOD_ALT) <> 0 Then Parts.Add("ALT")
+        If (Mods And MOD_SHIFT) <> 0 Then Parts.Add("SHIFT")
+        If (Mods And MOD_WIN) <> 0 Then Parts.Add("WIN")
+        Parts.Add(VKToKeyName(VK).ToUpperInvariant())
+        Return String.Join("+", Parts)
     End Function
 
     ''' <summary>修饰键 + 虚拟键码拼成设置里存的文本（Alt+Q）。</summary>
@@ -461,6 +461,9 @@ Public Module UltraVideo
         Dim RecordAudio As Boolean = Settings.Get(Of Boolean)("VideoAudio")
         Dim OutputFile As String = VideoFolder & $"MC_{Date.Now:yyyyMMdd_HHmmss}.mp4"
 
+        'AMD 驱动同进程只允许一个桌面复制会话：先把帧率 HUD 的会话让出来
+        UltraHud.SuspendForRecording()
+
         '初始化录制内核要一两秒，放后台跑，界面不会被卡住
         RunInNewThread(
         Sub()
@@ -529,6 +532,8 @@ Public Module UltraVideo
             Catch ex As Exception
                 Logger.Error(ex, "结束录制时出错")
             End Try
+            '录制会话已经释放，帧率 HUD 可以接回去了
+            UltraHud.ResumeAfterRecording()
             Dim SizeText As String = ""
             Try
                 If System.IO.File.Exists(OutputPath) Then
@@ -601,6 +606,8 @@ Public Module UltraVideo
     ''' </summary>
     Public Sub OnGameExited()
         Try
+            'Ultra：游戏退出后 UHD 浮窗也要收掉，不在桌面上继续跑
+            UltraHud.OnGameExited()
             If Not IsRecording Then Return
             If Not RecordingAuto Then Return
             Dispatch(Sub() StopRecording())
@@ -624,6 +631,7 @@ Public Module UltraVideo
         WindowRecordFrame.HideFrame()
         Dim Reason As String = UltraVideoNative.LastError
         Logger.Warn("录制意外结束：" & Reason)
+        UltraHud.ResumeAfterRecording()
         Dispatch(
         Sub()
             RaiseStatus()

@@ -6,6 +6,84 @@
     PanScroll="PanBack">
     <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
                 <StackPanel x:Name="PanMain" Margin="25,10">
+            <!-- Ultra 新增：社区资源分类描边 -->
+            <local:MyCard x:Name="CardResourceOutline" Margin="0,15" Title="社区资源描边">
+                <StackPanel Margin="25,40,25,20">
+                    <local:MyCheckBox x:Name="CheckResourceOutline" Height="22" local:SettingService.Key="UltraResourceOutline"
+                                      Text="按类型给社区资源条目加上彩色描边" />
+                    <TextBlock Margin="0,6,0,16" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ColorBrush3}"
+                               Text="在 Mod、整合包、MC 百科等资源列表里，按条目所属类型（科技、魔法、冒险…）显示不同颜色的边框。&#xa;颜色与开关的改动会立即应用到已经显示的列表，不必重新搜索。" />
+                    <TextBlock Text="分类颜色" FontSize="14" Margin="0,0,0,4" />
+                    <TextBlock Text="点击类型修改描边颜色；未列出的类型统一使用「其他」。" FontSize="12" Margin="0,0,0,10"
+                               Foreground="{DynamicResource ColorBrush3}" TextWrapping="Wrap" />
+                    <WrapPanel x:Name="PanOutlineTypes" Margin="0,0,0,10" />
+                    <Border x:Name="PanOutlineEditor" Visibility="Collapsed" Margin="0,2,0,12" Padding="14,12"
+                            Background="{DynamicResource ColorBrushSemiTransparent}" CornerRadius="6"
+                            BorderThickness="1" BorderBrush="{DynamicResource ColorBrush3}">
+                        <StackPanel>
+                            <TextBlock x:Name="LabOutlineEditing" Text="正在编辑" FontSize="13" Margin="0,0,0,10" />
+                            <WrapPanel x:Name="PanOutlinePresets" Margin="0,0,0,8" />
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="自定义颜色" VerticalAlignment="Center" FontSize="12" Margin="0,0,10,0" />
+                                <local:MyTextBox x:Name="BoxOutlineHex" Width="104" Height="26" MaxLength="7" HintText="#3B82F6" />
+                                <Border x:Name="RectOutlinePreview" Width="26" Height="26" CornerRadius="5" Margin="10,0,10,0"
+                                        BorderThickness="1" BorderBrush="{DynamicResource ColorBrush3}" />
+                                <local:MyButton x:Name="BtnOutlineApplyHex" Text="应用" Height="26" MinWidth="70" Padding="10,0" />
+                                <local:MyButton x:Name="BtnOutlineEditorClose" Text="收起" Height="26" MinWidth="70" Padding="10,0" Margin="10,0,0,0" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <local:MyButton x:Name="BtnOutlineReset" Text="恢复默认配色" Height="30" HorizontalAlignment="Left" Padding="14,5" />
+                </StackPanel>
+            </local:MyCard>
+            <!-- Ultra 新增：圆角与按钮尺寸调节 -->
+            <local:MyCard x:Name="CardCorner" Margin="0,15" Title="圆角与按钮尺寸">
+                <StackPanel Margin="25,40,25,20">
+                    <local:MyButton x:Name="BtnCornerReset" Text="恢复默认" Height="30" Padding="14,5" HorizontalAlignment="Left" Margin="0,0,0,16" />
+                    <TextBlock Text="按钮圆角" FontSize="14" Margin="0,0,0,6" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <local:MySlider x:Name="SliderButtonCorner" local:SettingService.Key="UltraButtonCorner" MaxValue="12" />
+                        <TextBlock x:Name="LabButtonCorner" Grid.Column="1" VerticalAlignment="Center" Margin="14,0,0,0"
+                                   FontSize="12" Foreground="{DynamicResource ColorBrush3}" />
+                    </Grid>
+                    <TextBlock Text="按钮高度" FontSize="14" Margin="0,18,0,6" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <local:MySlider x:Name="SliderButtonHeight" local:SettingService.Key="UltraButtonHeight" MaxValue="60" />
+                        <TextBlock x:Name="LabButtonHeight" Grid.Column="1" VerticalAlignment="Center" Margin="14,0,0,0"
+                                   FontSize="12" Foreground="{DynamicResource ColorBrush3}" />
+                    </Grid>
+                    <TextBlock Text="按钮宽度" FontSize="14" Margin="0,18,0,6" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <local:MySlider x:Name="SliderButtonWidth" local:SettingService.Key="UltraButtonWidth" MaxValue="300" ValueByKey="10" />
+                        <TextBlock x:Name="LabButtonWidth" Grid.Column="1" VerticalAlignment="Center" Margin="14,0,0,0"
+                                   FontSize="12" Foreground="{DynamicResource ColorBrush3}" />
+                    </Grid>
+                    <TextBlock Text="窗口圆角" FontSize="14" Margin="0,18,0,6" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <local:MySlider x:Name="SliderWindowCorner" local:SettingService.Key="UltraWindowCorner" MaxValue="16" />
+                        <TextBlock x:Name="LabWindowCorner" Grid.Column="1" VerticalAlignment="Center" Margin="14,0,0,0"
+                                   FontSize="12" Foreground="{DynamicResource ColorBrush3}" />
+                    </Grid>
+                    <TextBlock Margin="0,14,0,0" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ColorBrush3}"
+                               Text="按钮圆角/高度/宽度作用于全局按钮；窗口圆角作用于主窗口四角。&#xa;高度、宽度为 0 表示不干预（沿用各按钮原尺寸）。&#xa;拖动滑块即时生效。" />
+                </StackPanel>
+            </local:MyCard>
             <!-- Ultra 新增：原版风格卡片 -->
             <local:MyCard x:Name="CardUltraAppearance" Margin="0,15" Title="界面外观">
                 <StackPanel Margin="25,40,25,20">
@@ -84,6 +162,16 @@
                     <local:MySlider x:Name="SliderColorIntensity" local:SettingService.Key="UltraColorIntensity" MaxValue="100" ValueByKey="5" Margin="0,0,0,18" />
                     <TextBlock Text="调整主题色的鲜艳与深浅：浓度低颜色更淡，浓度高更鲜艳，拖动即时生效。默认 55%。" FontSize="13"
                                TextWrapping="Wrap" Foreground="{StaticResource ColorBrushGray3}" />
+                    <!-- Ultra：一级导航栏位置（顶边栏 / 侧边栏） -->
+                    <Grid Margin="0,20,0,8">
+                        <TextBlock Text="导航栏位置" FontSize="14" />
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                        <local:MyRadioBox x:Name="RadioNavTop" Text="顶边栏" local:SettingService.Key="UiLauncherNavType" local:SettingService.Value="0" />
+                        <local:MyRadioBox x:Name="RadioNavSide" Text="侧边栏" local:SettingService.Key="UiLauncherNavType" local:SettingService.Value="1" Margin="18,0,0,0" />
+                    </StackPanel>
+                    <TextBlock Text="顶边栏：导航按钮横排于标题栏中部。侧边栏：导航按钮竖排于窗口左侧，与二级菜单同列。&#xa;也可以直接点击标题栏右侧的切换按钮快速互换。" FontSize="13"
+                               TextWrapping="Wrap" Foreground="{StaticResource ColorBrushGray3}" Margin="0,2,0,4" />
                 </StackPanel>
             </local:MyCard>
             <local:MyCard Margin="0,0,0,15" Title="背景">

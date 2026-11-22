@@ -1,6 +1,6 @@
 ﻿''' <summary>
 ''' 工具箱左侧栏。
-''' Ultra：录制 / 截屏两项；以后加工具时在这里加 MyListItem，并在 PageGet / PageChange 里补分支。
+''' Ultra：录制 / 截屏 / 帧率三项；以后加工具时在这里加 MyListItem，并在 PageGet / PageChange 里补分支。
 ''' </summary>
 Public Class PageToolLeft
 
@@ -17,7 +17,7 @@ Public Class PageToolLeft
     ''' <summary>
     ''' 勾选事件改变页面。
     ''' </summary>
-    Private Sub PageCheck(sender As MyListItem, e As EventArgs) Handles ItemRecord.Check, ItemScreenshot.Check
+    Private Sub PageCheck(sender As MyListItem, e As EventArgs) Handles ItemRecord.Check, ItemScreenshot.Check, ItemHud.Check
         '尚未初始化控件属性时，sender.Tag 为 Nothing，跳过切换
         If sender.Tag IsNot Nothing Then PageChange(Val(sender.Tag))
     End Sub
@@ -34,6 +34,9 @@ Public Class PageToolLeft
             Case FormMain.PageSubType.ToolScreenshot
                 If FrmToolScreenshot Is Nothing Then FrmToolScreenshot = New PageToolScreenshot
                 Return FrmToolScreenshot
+            Case FormMain.PageSubType.ToolHud
+                If FrmToolHud Is Nothing Then FrmToolHud = New PageToolHud
+                Return FrmToolHud
             Case Else
                 Throw New Exception("未知的工具箱子页面种类：" & ID)
         End Select
@@ -53,6 +56,9 @@ Public Class PageToolLeft
                 Case FormMain.PageSubType.ToolScreenshot
                     If IsNothing(FrmToolScreenshot) Then FrmToolScreenshot = New PageToolScreenshot
                     PageChangeRun(FrmToolScreenshot)
+                Case FormMain.PageSubType.ToolHud
+                    If IsNothing(FrmToolHud) Then FrmToolHud = New PageToolHud
+                    PageChangeRun(FrmToolHud)
                 Case Else
                     Throw New Exception("未知的工具箱子页面种类：" & ID)
             End Select

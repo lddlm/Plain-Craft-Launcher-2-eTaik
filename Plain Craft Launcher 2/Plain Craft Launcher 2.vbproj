@@ -235,6 +235,11 @@
     <Compile Include="Modules\Resource\ResourceProject.vb" />
     <Compile Include="Modules\Resource\ResourceVersion.vb" />
     <Compile Include="Modules\Resource\ResourceSearcher.vb" />
+    <Compile Include="Modules\Resource\ResourceMcMod.vb" />
+    <Compile Include="Modules\Resource\ResourceOutline.vb" />
+    <Compile Include="Modules\World\NbtReader.vb" />
+    <Compile Include="Modules\World\SaveManager.vb" />
+    <Compile Include="Modules\World\SavePreview.vb" />
     <Compile Include="Modules\Minecraft\ModJava.vb" />
     <Compile Include="Modules\Resource\LocalResourceLoaders.vb" />
     <Compile Include="Modules\Minecraft\ModModpack.vb" />
@@ -280,10 +285,14 @@
     <Compile Include="Modules\UltraMf.vb" />
     <Compile Include="Modules\UltraWasapi.vb" />
     <Compile Include="Modules\UltraScreenshot.vb" />
+    <Compile Include="Modules\UltraHud.vb" />
+
+
     <Compile Include="Modules\ModDevelop.vb" />
     <Compile Include="Modules\Minecraft\ModWatcher.vb" />
     <Compile Include="Modules\ModSecret.vb" />
     <Compile Include="Modules\UltraAppearance.vb" />
+    <Compile Include="Modules\UltraCorner.vb" />
     <Compile Include="Pages\PageDownload\Resource\PageResource.xaml.vb">
       <DependentUpon>PageResource.xaml</DependentUpon>
     </Compile>
@@ -305,6 +314,9 @@
     </Compile>
     <Compile Include="Pages\PageDownload\Resource\PageDownloadMod.xaml.vb">
       <DependentUpon>PageDownloadMod.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageDownload\Resource\PageDownloadMcMod.xaml.vb">
+      <DependentUpon>PageDownloadMcMod.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\PageDownload\PageDownloadInstall.xaml.vb">
       <DependentUpon>PageDownloadInstall.xaml</DependentUpon>
@@ -355,6 +367,9 @@
     <Compile Include="Pages\PageInstance\PageInstanceOverall.xaml.vb">
       <DependentUpon>PageInstanceOverall.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\PageInstance\PageInstanceSaves.xaml.vb">
+      <DependentUpon>PageInstanceSaves.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Pages\PageInstance\PageInstanceSetup.xaml.vb">
       <DependentUpon>PageInstanceSetup.xaml</DependentUpon>
     </Compile>
@@ -376,6 +391,7 @@
     </Compile>
     <Compile Include="Pages\PageLaunch\SkinHelper.vb" />
     <Compile Include="Pages\PageLaunch\SkinLibrary.vb" />
+    <Compile Include="Pages\PageLaunch\CapeLibrary.vb" />
     <Compile Include="Pages\PageLaunch\PageLoginLegacy.xaml.vb">
       <DependentUpon>PageLoginLegacy.xaml</DependentUpon>
     </Compile>
@@ -442,6 +458,9 @@
     </Compile>
     <Compile Include="Pages\PageTool\PageToolScreenshot.xaml.vb">
       <DependentUpon>PageToolScreenshot.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageTool\PageToolHud.xaml.vb">
+      <DependentUpon>PageToolHud.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\PageSetup\SettingService.vb" />
     <Compile Include="Pages\PageSpeedLeft.xaml.vb">
@@ -608,6 +627,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Pages\PageDownload\Resource\PageDownloadMcMod.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Pages\PageDownload\PageDownloadInstall.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -760,6 +783,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Pages\PageTool\PageToolHud.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Pages\PageSpeedLeft.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -781,6 +808,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Pages\PageInstance\PageInstanceOverall.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageInstance\PageInstanceSaves.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -843,6 +874,10 @@
       <CustomToolNamespace>My.Resources</CustomToolNamespace>
       <SubType>Designer</SubType>
       <LastGenOutput>Resources.Designer.vb</LastGenOutput>
+    </EmbeddedResource>
+    <!-- Ultra：原生 OSD 内核，运行时释放到缓存目录后注入游戏进程 -->
+    <EmbeddedResource Include="Resources\PCL_OSD64.dll">
+      <LogicalName>PCL_OSD64.dll</LogicalName>
     </EmbeddedResource>
     <None Include="My Project\app.manifest" />
     <None Include="My Project\Settings.settings">
@@ -967,6 +1002,8 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\Icons\NoIcon.png" />
+    <Resource Include="Images\Icons\McModMod.png" />
+    <Resource Include="Images\Icons\McModPack.png" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\Heads\PCL2.png" />
@@ -1006,6 +1043,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\Heads\z0z0r4.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Heads\EnchantedApple.jpg" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Imazen.WebP.dll" />

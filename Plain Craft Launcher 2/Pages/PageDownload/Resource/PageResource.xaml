@@ -71,6 +71,8 @@
             </StackPanel>
         </local:MyCard>
         <StackPanel x:Name="PanContent">
+            <local:MyHint x:Name="HintMcMod" HasBorder="True" Visibility="Collapsed" Margin="0,0,0,15"
+                          Text="输入名称后点击「搜索」，检索 MC 百科（mcmod.cn）中的模组与整合包词条。&#xa;仅按名称匹配，不支持版本与类型筛选；点击结果将用浏览器打开对应的 MC 百科页面。" Theme="Yellow" />
             <local:MyHint x:Name="HintError" HasBorder="True" Text="无法连接到 Modrinth，所以目前仅显示了来自 CurseForge 的内容，搜索结果可能不全。&#xa;请稍后再试，或使用 VPN 改善网络环境。" Theme="Yellow" Margin="0,0,0,15" />
             <local:MyCard x:Name="CardProjects" UseAnimation="False">
                 <StackPanel x:Name="PanProjects" Margin="12" />

@@ -427,6 +427,18 @@ Public Class ResourceProject
     End Function
 
     ''' <summary>
+    ''' 资源来源的显示名称。
+    ''' </summary>
+    Public Shared Function GetPlatformName(Platform As ResourcePlatforms) As String
+        Select Case Platform
+            Case ResourcePlatforms.CurseForge : Return "CurseForge"
+            Case ResourcePlatforms.Modrinth : Return "Modrinth"
+            Case ResourcePlatforms.McMod : Return "MC 百科"
+            Case Else : Return Platform.ToString
+        End Select
+    End Function
+
+    ''' <summary>
     ''' 将当前实例转为可用于保存缓存的 Json。
     ''' </summary>
     Public Function ToJson() As JObject
@@ -541,7 +553,17 @@ Public Class ResourceProject
             NewItem.Tags = Tags
             NewItem.Description = Description.ReplaceLineEndings("")
             '下边栏
-            If Not ShowMcVersionDesc AndAlso Not ShowLoaderDesc Then
+            If Platform = ResourcePlatforms.McMod Then
+                '百科词条没有版本、加载器与下载量信息
+                CType(NewItem.PathVersion.Parent, Grid).Children.Remove(NewItem.PathVersion)
+                CType(NewItem.LabVersion.Parent, Grid).Children.Remove(NewItem.LabVersion)
+                NewItem.ColumnVersion1.Width = New GridLength(0)
+                NewItem.ColumnVersion2.MaxWidth = 0
+                NewItem.ColumnVersion3.Width = New GridLength(0)
+                CType(NewItem.PathDownload.Parent, Grid).Children.Remove(NewItem.PathDownload)
+                CType(NewItem.PathTime.Parent, Grid).Children.Remove(NewItem.PathTime)
+                NewItem.LabDownload.Text = ""
+            ElseIf Not ShowMcVersionDesc AndAlso Not ShowLoaderDesc Then
                 '全部隐藏
                 CType(NewItem.PathVersion.Parent, Grid).Children.Remove(NewItem.PathVersion)
                 CType(NewItem.LabVersion.Parent, Grid).Children.Remove(NewItem.LabVersion)
@@ -558,11 +580,16 @@ Public Class ResourceProject
                 '仅显示 Mod 加载器
                 NewItem.LabVersion.Text = ModLoaderDescriptionFull
             End If
-            NewItem.LabSource.Text = Platform.ToString
-            NewItem.LabTime.Text = StringUtils.FormatTimeSpan(LastUpdate - Date.Now, True)
-            NewItem.LabDownload.Text =
-                If(DownloadCount > 100000000, Math.Round(DownloadCount / 100000000, 2) & " 亿",
-                If(DownloadCount > 100000, Math.Floor(DownloadCount / 10000) & " 万", DownloadCount))
+            NewItem.LabSource.Text = GetPlatformName(Platform)
+            If Platform = ResourcePlatforms.McMod Then
+                NewItem.LabTime.Text = ""
+            Else
+                NewItem.LabTime.Text = StringUtils.FormatTimeSpan(LastUpdate - Date.Now, True)
+                NewItem.LabDownload.Text =
+                    If(DownloadCount > 100000000, Math.Round(DownloadCount / 100000000, 2) & " 亿",
+                    If(DownloadCount > 100000, Math.Floor(DownloadCount / 10000) & " 万", DownloadCount))
+            End If
+            ResourceOutline.ApplyTo(NewItem, Me)
             Return NewItem
         End Function) With {.Height = 64}
     End Function

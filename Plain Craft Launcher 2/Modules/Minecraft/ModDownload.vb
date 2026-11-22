@@ -1173,10 +1173,19 @@ Public Module ModDownload
     ''' 调用 NetRequest，会进行重试。
     ''' </summary>
     Public Function DlModRequest(Url As String, Optional Method As HttpMethod = Nothing,
-                                 Optional Content As String = Nothing, Optional ContentType As String = Nothing) As JToken
+                                 Optional Content As String = Nothing, Optional ContentType As String = Nothing,
+                                 Optional FastMode As Boolean = False) As JToken
         Dim Urls As New List(Of (Url As String, Timeout As Integer))
         Dim McimUrl As String = DlSourceModGet(Url)
-        If McimUrl <> Url Then
+        If FastMode Then
+            '搜索这类交互请求不能让人干等：镜像优先，超时压到 5 秒
+            If McimUrl <> Url Then
+                Urls.Add((McimUrl, 5))
+                Urls.Add((Url, 5))
+            Else
+                Urls.Add((Url, 5))
+            End If
+        ElseIf McimUrl <> Url Then
             Select Case Settings.Get(Of Integer)("ToolDownloadMod")
                 Case 0
                     Urls.Add((McimUrl, 10))

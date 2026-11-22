@@ -5,6 +5,7 @@ Public Class PageSetupSystem
 
         '重复加载部分
         PanBack.ScrollToHome()
+        RefreshDownloadPath() '每次进入都重读一次，避免在别处换了文件夹后这里还显示旧路径
 
         If BuildType = BuildTypes.Release Then
             PanDonate.Visibility = Visibility.Collapsed
@@ -17,6 +18,9 @@ Public Class PageSetupSystem
         Static IsLoaded As Boolean = False
         If IsLoaded Then Return
         IsLoaded = True
+
+        '文件夹列表刷新完成后同步「下载位置」显示
+        AddHandler McFolderListLoader.OnStateChangedUi, AddressOf FolderLoaderState
 
         AniControlEnabled += 1
         Reload()
@@ -36,6 +40,84 @@ Public Class PageSetupSystem
             Logger.Error(ex, "初始化启动器页设置失败", LogBehavior.Alert)
         End Try
         Reload()
+    End Sub
+
+    ''' <summary>
+    ''' 刷新「下载位置」：显示当前 Minecraft 文件夹（下载的版本、Mod、资源包都落在这里）。
+    ''' </summary>
+    Private Sub RefreshDownloadPath()
+        Try
+            Dim Folder As String = McFolderSelected
+            If String.IsNullOrWhiteSpace(Folder) Then
+                LabDownloadPath.Text = "（还没有选择 Minecraft 文件夹）"
+                LabDownloadPath.ToolTip = Nothing
+                Return
+            End If
+            LabDownloadPath.Text = Folder
+            LabDownloadPath.ToolTip = Folder
+        Catch ex As Exception
+            LabDownloadPath.Text = "（读取失败）"
+            LabDownloadPath.ToolTip = Nothing
+            Logger.Error(ex, "读取下载位置失败")
+        End Try
+    End Sub
+    ''' <summary>文件夹列表刷新结束时，回读一次下载位置（更改文件夹后靠它更新显示）。</summary>
+    Private Sub FolderLoaderState(Loader As LoaderBase, NewState As LoadState, OldState As LoadState)
+        If NewState = LoadState.Finished OrElse NewState = LoadState.Canceled Then
+            RunInUi(Sub() RefreshDownloadPath())
+        End If
+    End Sub
+    Private Sub BtnDownloadPathChange_Click(sender As Object, e As MouseButtonEventArgs) Handles BtnDownloadPathChange.Click
+        '与 启动 → 添加文件夹 保持一致：下载或版本修改期间不许换文件夹
+        If McInstanceLock.IsAnyLocked OrElse HasDownloadingTask() Then
+            Hint("请在其他任务完成后，再更改下载位置！", HintType.Red)
+            Return
+        End If
+        Dim NewFolder As String = ""
+        Try
+            NewFolder = Dialogs.SelectFolder("选择下载位置", False).FirstOrDefault
+            If NewFolder Is Nothing Then Return
+            If NewFolder.Contains("!") OrElse NewFolder.Contains(";") Then
+                Hint("文件夹路径中不能含有感叹号或分号！", HintType.Red)
+                Return
+            End If
+            If PathUtils.IsSame(McFolderSelected, NewFolder) Then
+                Hint("下载位置已经是这个文件夹了。", HintType.Blue)
+                Return
+            End If
+            '已在文件夹列表里：直接切过去，不要用默认名覆盖用户起的名字
+            Dim Existing = McFolderList.FirstOrDefault(Function(F) PathUtils.IsSame(F.Location, NewFolder))
+            If Existing IsNot Nothing Then
+                McFolderSelected = Existing.Location
+                RefreshDownloadPath()
+                Hint("下载位置已切换到 " & Existing.Name & "。", HintType.Green)
+                Return
+            End If
+            '新文件夹：交给 PCL 原生流程（权限检查、子目录修正、写入文件夹列表、切换并刷新）
+            Dim DefaultName As String = PathUtils.GetLastPart(NewFolder)
+            If DefaultName = ".minecraft" Then
+                Dim ParentFolder As String = PathUtils.RemoveLastPart(NewFolder)
+                DefaultName = If(ParentFolder.EndsWithF(":"), "", PathUtils.GetLastPart(ParentFolder))
+            End If
+            If DefaultName.Length > 40 Then DefaultName = DefaultName.Substring(0, 39)
+            PageSelectLeft.AddFolder(NewFolder, DefaultName, True)
+        Catch ex As Exception
+            Logger.Error(ex, $"更改下载位置失败（{NewFolder}）")
+            Hint("更改下载位置失败：" & ex.Message, HintType.Red)
+        End Try
+    End Sub
+    Private Sub BtnDownloadPathOpen_Click(sender As Object, e As MouseButtonEventArgs) Handles BtnDownloadPathOpen.Click
+        Try
+            Dim Folder As String = McFolderSelected
+            If String.IsNullOrWhiteSpace(Folder) OrElse Not DirectoryUtils.Exists(Folder) Then
+                Hint("下载位置还不存在，请先在 启动 → 版本选择 里选一个 Minecraft 文件夹。", HintType.Red)
+                Return
+            End If
+            OpenExplorer(Folder)
+        Catch ex As Exception
+            Logger.Error(ex, "打开下载位置失败")
+            Hint("打开下载位置失败：" & ex.Message, HintType.Red)
+        End Try
     End Sub
 
     '滑动条

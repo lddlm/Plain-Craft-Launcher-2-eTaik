@@ -385,6 +385,7 @@ EndHint:
     Public FrmDownloadShader As PageDownloadShader
     Public FrmDownloadResourcePack As PageDownloadResourcePack
     Public FrmDownloadJava As PageDownloadJava
+    Public FrmDownloadMcMod As PageDownloadMcMod
 
     '设置页面声明
     Public FrmSetupLeft As PageSetupLeft
@@ -408,6 +409,7 @@ EndHint:
     Public FrmToolLeft As PageToolLeft
     Public FrmToolRecord As PageToolRecord
     Public FrmToolScreenshot As PageToolScreenshot
+    Public FrmToolHud As PageToolHud
 
     '登录页面声明
     Public FrmLoginLegacy As PageLoginLegacy
@@ -425,6 +427,7 @@ EndHint:
     Public FrmInstanceModDisabled As PageInstanceModDisabled
     Public FrmInstanceSetup As PageInstanceSetup
     Public FrmInstanceExport As PageInstanceExport
+Public FrmInstanceSaves As PageInstanceSaves
     Public FrmDownloadModify As PageDownloadModify
 
     '资源信息分页声明

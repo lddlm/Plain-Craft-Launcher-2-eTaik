@@ -1,4 +1,4 @@
-Public Class PageSetupUI
+﻿Public Class PageSetupUI
 
     Private Sub PageSetupUI_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
         '重复加载部分
@@ -6,6 +6,8 @@ Public Class PageSetupUI
         ThemeCheckAll(True)
         UnlockAllThemes()
         BuildThemeColorPicker()
+        BuildOutlineTypes()
+        BuildCornerCard()
         LabColorIntensity.Text = Settings.Get(Of Integer)("UltraColorIntensity") & "%"
         If ThemeDontClick <> 0 Then
             Dim NewText As String = Nothing
@@ -1159,5 +1161,189 @@ Refresh:
         End If
     End Sub
 
+
+    ''' <summary>
+    ''' 一级导航栏位置：切换后立即应用到主窗口。
+    ''' </summary>
+    Private Sub RadioNav_Changed(sender As MyRadioBox, e As RouteEventArgs) Handles RadioNavTop.Changed, RadioNavSide.Changed
+        Try
+            FrmMain.ApplyNavLayoutTo(sender Is RadioNavSide, True)
+        Catch ex As Exception
+            Logger.Error(ex, "切换导航栏位置失败")
+        End Try
+    End Sub
+
+#Region "社区资源描边"
+
+    Private OutlineEditingType As String = Nothing
+    Private OutlineBusy As Boolean = False
+
+    '生成分类色块列表，只在首次进入时创建一次。
+    Private Sub BuildOutlineTypes()
+        If PanOutlineTypes Is Nothing Then Return
+        If PanOutlineTypes.Children.Count > 0 Then Return
+        For Each TypeKey In ResourceOutline.CategoryNames
+            Dim Row As New StackPanel With {
+                .Orientation = Orientation.Horizontal,
+                .Margin = New Thickness(0, 0, 20, 9),
+                .Cursor = Cursors.Hand,
+                .Tag = TypeKey,
+                .ToolTip = $"点击修改「{TypeKey}」的描边颜色"}
+            Dim Dot As New Border With {
+                .Width = 18, .Height = 18, .CornerRadius = New CornerRadius(5),
+                .BorderThickness = New Thickness(1),
+                .BorderBrush = New SolidColorBrush(Color.FromArgb(70, 0, 0, 0)),
+                .Background = ResourceOutline.Brushes(TypeKey),
+                .VerticalAlignment = VerticalAlignment.Center}
+            Dim Lab As New TextBlock With {
+                .Text = TypeKey, .FontSize = 12, .Margin = New Thickness(7, 0, 0, 0),
+                .VerticalAlignment = VerticalAlignment.Center}
+            Row.Children.Add(Dot)
+            Row.Children.Add(Lab)
+            AddHandler Row.MouseLeftButtonUp, AddressOf OutlineType_Click
+            PanOutlineTypes.Children.Add(Row)
+        Next
+    End Sub
+
+    Private Sub OutlineType_Click(sender As Object, e As MouseButtonEventArgs)
+        Dim Row = TryCast(sender, StackPanel)
+        If Row Is Nothing Then Return
+        OpenOutlineEditor(Row.Tag.ToString)
+    End Sub
+
+    Private Sub OpenOutlineEditor(TypeKey As String)
+        OutlineEditingType = TypeKey
+        LabOutlineEditing.Text = $"正在编辑：{TypeKey}"
+        SyncOutlineEditor()
+        BuildOutlinePresets()
+        UpdateOutlineSelection()
+        PanOutlineEditor.Visibility = Visibility.Visible
+    End Sub
+
+    '把编辑器的预览与 HEX 输入框同步为当前颜色。
+    Private Sub SyncOutlineEditor()
+        If OutlineEditingType Is Nothing Then Return
+        If Not ResourceOutline.Brushes.ContainsKey(OutlineEditingType) Then Return
+        OutlineBusy = True
+        BoxOutlineHex.Text = "#" & ResourceOutline.ToHex(ResourceOutline.Brushes(OutlineEditingType).Color)
+        OutlineBusy = False
+        RectOutlinePreview.Background = ResourceOutline.Brushes(OutlineEditingType)
+    End Sub
+
+    Private Sub BuildOutlinePresets()
+        If PanOutlinePresets Is Nothing Then Return
+        PanOutlinePresets.Children.Clear()
+        For Each HexValue In ResourceOutline.PresetColors
+            Dim Dot As New Border With {
+                .Width = 26, .Height = 26, .CornerRadius = New CornerRadius(7),
+                .Margin = New Thickness(0, 0, 9, 9),
+                .Cursor = Cursors.Hand,
+                .Background = New SolidColorBrush(ResourceOutline.ParseHex(HexValue)),
+                .Tag = HexValue,
+                .ToolTip = "#" & HexValue}
+            AddHandler Dot.MouseLeftButtonUp, AddressOf OutlinePreset_Click
+            PanOutlinePresets.Children.Add(Dot)
+        Next
+    End Sub
+
+    Private Sub OutlinePreset_Click(sender As Object, e As MouseButtonEventArgs)
+        Dim Dot = TryCast(sender, Border)
+        If Dot Is Nothing Then Return
+        ApplyOutlineColor(Dot.Tag.ToString)
+    End Sub
+
+    Private Sub ApplyOutlineColor(HexValue As String)
+        If OutlineEditingType Is Nothing Then Return
+        ResourceOutline.SetColor(OutlineEditingType, HexValue)
+        SyncOutlineEditor()
+        UpdateOutlineSelection()
+    End Sub
+
+    Private Sub BoxOutlineHex_TextChanged(sender As Object, e As TextChangedEventArgs) Handles BoxOutlineHex.TextChanged
+        If OutlineBusy OrElse OutlineEditingType Is Nothing Then Return
+        Dim T As String = BoxOutlineHex.Text.Trim().TrimStart("#"c)
+        If T.Length <> 6 Then Return
+        Try
+            Convert.ToInt32(T, 16)
+        Catch
+            Return
+        End Try
+        ResourceOutline.SetColor(OutlineEditingType, T)
+        RectOutlinePreview.Background = ResourceOutline.Brushes(OutlineEditingType)
+    End Sub
+
+    Private Sub BtnOutlineApplyHex_Click(sender As Object, e As EventArgs) Handles BtnOutlineApplyHex.Click
+        ApplyOutlineColor(BoxOutlineHex.Text)
+    End Sub
+
+    Private Sub BtnOutlineEditorClose_Click(sender As Object, e As EventArgs) Handles BtnOutlineEditorClose.Click
+        PanOutlineEditor.Visibility = Visibility.Collapsed
+        OutlineEditingType = Nothing
+        UpdateOutlineSelection()
+    End Sub
+
+    Private Sub BtnOutlineReset_Click(sender As Object, e As EventArgs) Handles BtnOutlineReset.Click
+        ResourceOutline.ResetAll()
+        If OutlineEditingType IsNot Nothing Then SyncOutlineEditor()
+        Hint("已恢复默认描边配色")
+    End Sub
+
+    '高亮当前正在编辑的分类。
+    Private Sub UpdateOutlineSelection()
+        If PanOutlineTypes Is Nothing Then Return
+        For Each Item In PanOutlineTypes.Children
+            Dim Row = TryCast(Item, StackPanel)
+            If Row Is Nothing OrElse Row.Tag Is Nothing Then Continue For
+            Dim Dot = TryCast(Row.Children(0), Border)
+            If Dot Is Nothing Then Continue For
+            Dim Selected As Boolean = OutlineEditingType IsNot Nothing AndAlso Row.Tag.ToString = OutlineEditingType
+            Dot.BorderThickness = New Thickness(If(Selected, 2, 1))
+            Dot.BorderBrush = New SolidColorBrush(Color.FromArgb(If(Selected, 200, 70), 0, 0, 0))
+        Next
+    End Sub
+
+#End Region
+
+#Region "圆角调节"
+
+    Private Sub BuildCornerCard()
+        Static Hooked As Boolean = False
+        LabButtonCorner.Text = Settings.Get(Of Integer)("UltraButtonCorner") & " px"
+        LabWindowCorner.Text = Settings.Get(Of Integer)("UltraWindowCorner") & " px"
+        Dim BtnH = Settings.Get(Of Integer)("UltraButtonHeight")
+        Dim BtnW = Settings.Get(Of Integer)("UltraButtonWidth")
+        LabButtonHeight.Text = If(BtnH = 0, "自动", BtnH & " px")
+        LabButtonWidth.Text = If(BtnW = 0, "自动", BtnW & " px")
+        If Hooked Then Return
+        Hooked = True
+        AddHandler SliderButtonCorner.Change, Sub(sender, user)
+                                                  LabButtonCorner.Text = SliderButtonCorner.Value & " px"
+                                              End Sub
+        AddHandler SliderWindowCorner.Change, Sub(sender, user)
+                                                  LabWindowCorner.Text = SliderWindowCorner.Value & " px"
+                                              End Sub
+        AddHandler SliderButtonHeight.Change, Sub(sender, user)
+                                                  LabButtonHeight.Text = If(SliderButtonHeight.Value = 0, "自动", SliderButtonHeight.Value & " px")
+                                              End Sub
+        AddHandler SliderButtonWidth.Change, Sub(sender, user)
+                                                  LabButtonWidth.Text = If(SliderButtonWidth.Value = 0, "自动", SliderButtonWidth.Value & " px")
+                                              End Sub
+        AddHandler BtnCornerReset.Click, Sub(sender, e) ResetCornerCard()
+    End Sub
+
+    '恢复圆角/按钮尺寸四项为默认值（滑块与标签同步）。
+    Private Sub ResetCornerCard()
+        SettingService.ResetSettings(CardCorner)   '递归重置卡片内所有带 SettingService.Key 的控件，并触发 UltraCorner.Refresh
+        SettingService.RefreshSettings(CardCorner) '把滑块显示同步回默认值
+        LabButtonCorner.Text = Settings.Get(Of Integer)("UltraButtonCorner") & " px"
+        LabWindowCorner.Text = Settings.Get(Of Integer)("UltraWindowCorner") & " px"
+        Dim BtnH = Settings.Get(Of Integer)("UltraButtonHeight")
+        Dim BtnW = Settings.Get(Of Integer)("UltraButtonWidth")
+        LabButtonHeight.Text = If(BtnH = 0, "自动", BtnH & " px")
+        LabButtonWidth.Text = If(BtnW = 0, "自动", BtnW & " px")
+        Hint("已恢复默认圆角与按钮尺寸")
+    End Sub
+
+#End Region
 
 End Class

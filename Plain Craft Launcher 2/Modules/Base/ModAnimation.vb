@@ -935,6 +935,16 @@ Public Module ModAnimation
         End SyncLock
     End Sub
     ''' <summary>
+    ''' 判断本帧快照里的动画组是否仍然存活：没被 AniStop 移除，也没被同名新组顶掉。
+    ''' </summary>
+    Private Function AniGroupIsAlive(Entry As AniGroupEntry) As Boolean
+        If Entry Is Nothing Then Return False
+        SyncLock AniGroupsLock
+            Dim Current As AniGroupEntry = Nothing
+            Return AniGroups.TryGetValue(Entry.Key, Current) AndAlso Current.Uuid = Entry.Uuid
+        End SyncLock
+    End Function
+    ''' <summary>
     ''' 获取动画是否正在进行中。
     ''' </summary>
     Public Function AniIsRun(Name As String) As Boolean
@@ -1048,6 +1058,11 @@ Sleeper:
                 Dim Entry As AniGroupEntry = Snapshot(i)
                 If Entry Is Nothing Then Continue Do
                 If Entry.StartTick > AniLastTick Then Continue Do '跳过本刻之后开始的动画
+                '快照是本帧开头取的，本帧前半段可能有 AaCode 里调用了 AniStop（典型场景：
+                '切页时 PageOnForceExit 强制清空旧页）。被停掉的组绝不能再继续跑，
+                '否则它那些 IsAfter 的收尾回调仍会执行，表现为
+                '「在状态为 Empty 时触发了 PageOnExitAnimationFinished」。
+                If Not AniGroupIsAlive(Entry) Then Continue Do
                 Dim CanRemoveAfter = True '是否应该去除“之后”标记
                 Dim ii = 0
 
