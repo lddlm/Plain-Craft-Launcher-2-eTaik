@@ -1,4 +1,4 @@
-﻿Imports System.Windows.Markup
+Imports System.Windows.Markup
 
 <ContentProperty("Inlines")>
 Public Class MyButton
@@ -67,55 +67,6 @@ Public Class MyButton
             PanFore.RenderTransform = value
         End Set
     End Property
-
-    '全局按钮尺寸：跟随设置→个性化里的按钮高度/宽度滑块（0 = 不干预）。
-    '高度用 MinHeight 下限即可；宽度只对"独占一行"的按钮生效，
-    '并排按钮（Grid 同行 / 水平 StackPanel）强制撑宽会互相重叠，故跳过。
-    Private Sub ApplyGlobalSize()
-        Try
-            If UltraCorner.ButtonHeight > 0 Then Me.MinHeight = UltraCorner.ButtonHeight
-            If UltraCorner.ButtonWidth > 0 AndAlso Not IsSharingRow() Then Me.MinWidth = UltraCorner.ButtonWidth
-        Catch ex As Exception
-            Logger.Warn(ex, "应用全局按钮尺寸失败")
-        End Try
-    End Sub
-
-    '判断本按钮是否与其它 MyButton 并排共享一行。
-    '并排时若强行加宽，固定宽度容器（如启动页左栏 300px）里两个按钮会溢出重叠。
-    Private Function IsSharingRow() As Boolean
-        Try
-            Dim P = Me.Parent
-            If P Is Nothing Then Return False
-            '水平 StackPanel / WrapPanel 里的多个子元素视为并排
-            If TypeOf P Is StackPanel AndAlso DirectCast(P, StackPanel).Orientation = Orientation.Horizontal Then
-                Return DirectCast(P, Panel).Children.Count > 1
-            End If
-            If TypeOf P Is WrapPanel Then Return DirectCast(P, Panel).Children.Count > 1
-            'Grid 里同一 Row 有其它 MyButton 视为并排
-            Dim G = TryCast(P, Grid)
-            If G IsNot Nothing Then
-                Dim MyRow = Grid.GetRow(Me)
-                For Each Child As UIElement In G.Children
-                    If Child IsNot Me AndAlso TypeOf Child Is MyButton AndAlso Grid.GetRow(Child) = MyRow Then Return True
-                Next
-            End If
-            Return False
-        Catch ex As Exception
-            Return False
-        End Try
-    End Function
-
-    Private Sub MyButton_LoadedSize(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
-        ApplyGlobalSize()
-        AddHandler UltraCorner.ButtonSizeChanged, AddressOf Me.OnButtonSizeChanged
-    End Sub
-    Private Sub MyButton_UnloadedSize(sender As Object, e As RoutedEventArgs) Handles Me.Unloaded
-        RemoveHandler UltraCorner.ButtonSizeChanged, AddressOf Me.OnButtonSizeChanged
-    End Sub
-    Private Sub OnButtonSizeChanged()
-        If Not IsLoaded Then Return
-        Dispatcher.BeginInvoke(Sub() ApplyGlobalSize())
-    End Sub
 
     '自定义事件
     Private Const AnimationColorIn As Integer = 100

@@ -238,8 +238,6 @@
     <Compile Include="Modules\Resource\ResourceMcMod.vb" />
     <Compile Include="Modules\Resource\ResourceOutline.vb" />
     <Compile Include="Modules\World\NbtReader.vb" />
-    <Compile Include="Modules\World\SaveManager.vb" />
-    <Compile Include="Modules\World\SavePreview.vb" />
     <Compile Include="Modules\Minecraft\ModJava.vb" />
     <Compile Include="Modules\Resource\LocalResourceLoaders.vb" />
     <Compile Include="Modules\Minecraft\ModModpack.vb" />
@@ -366,9 +364,6 @@
     </Compile>
     <Compile Include="Pages\PageInstance\PageInstanceOverall.xaml.vb">
       <DependentUpon>PageInstanceOverall.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Pages\PageInstance\PageInstanceSaves.xaml.vb">
-      <DependentUpon>PageInstanceSaves.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\PageInstance\PageInstanceSetup.xaml.vb">
       <DependentUpon>PageInstanceSetup.xaml</DependentUpon>
@@ -811,10 +806,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Pages\PageInstance\PageInstanceSaves.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Pages\PageInstance\PageInstanceSetup.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -1045,7 +1036,6 @@
     <Resource Include="Images\Heads\z0z0r4.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Images\Heads\EnchantedApple.jpg" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Imazen.WebP.dll" />

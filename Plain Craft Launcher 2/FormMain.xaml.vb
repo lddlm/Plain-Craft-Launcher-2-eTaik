@@ -265,12 +265,6 @@ Public Class FormMain
                 BugCount += 10
             End If
         End If
-        If LastVersion < 426 Then 'eTaik 3.4.5
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(6, "新增：存档管理里可给存档改名（仅改显示名称，不改文件夹）"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "新增：关于页展示联合开发者，并可前往其主页"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：圆角与按钮尺寸卡片支持一键恢复默认"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "改进：存档列表封面改为 4:3，详情去掉地形预览，按钮圆角/宽高可全局调节"))
-        End If
         If LastVersion < 424 Then 'eTaik 3.4.4
             FeatureList.Add(New KeyValuePair(Of Integer, String)(6, "改进：存档详情改为展开在被点存档的正下方，不再单独占一张卡片"))
             FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "改进：地图预览换成按种子生成的种子预览图（4:3），不再读取区块数据，没有区块的存档也能出图"))
@@ -1393,7 +1387,6 @@ Public Class FormMain
         InstanceMod = 3
         InstanceModDisabled = 4
         InstanceExport = 5
-        InstanceSaves = 6
     End Enum
     ''' <summary>
     ''' 获取次级页面的名称。若并非次级页面则返回空字符串，故可以以此判断是否为次级页面。
