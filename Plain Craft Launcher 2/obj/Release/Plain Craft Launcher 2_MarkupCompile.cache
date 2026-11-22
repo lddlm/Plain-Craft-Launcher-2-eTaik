@@ -1,0 +1,20 @@
+﻿Plain Craft Launcher 2
+
+
+winexe
+VB
+.vb
+D:\PCL-Ultra\open-source\v3.3.2\Plain Craft Launcher 2\obj\Release\
+PCL
+none
+false
+RELEASE
+D:\PCL-Ultra\open-source\v3.3.2\Plain Craft Launcher 2\Application.xaml
+741930660296
+
+141-1961484415
+35656398520
+Controls\MyExtraTextButton.xaml;Controls\MyExtraButton.xaml;Controls\MyHint.xaml;Controls\MyListItem.xaml;Controls\MyButton.xaml;Controls\MyCheckBox.xaml;Controls\MyIconButton.xaml;Controls\MyLoading.xaml;Controls\MyMsg\MyMsgInput.xaml;Controls\MyMsg\MyMsgSelect.xaml;Controls\MyMsg\MyMsgText.xaml;Controls\MyRadioBox.xaml;Controls\MyIconTextButton.xaml;Controls\MySearchBox.xaml;Controls\MySlider.xaml;Controls\MyRadioButton.xaml;FormMain.xaml;WindowVideoToast.xaml;WindowRegionSelect.xaml;WindowRecordFrame.xaml;Pages\PageInstance\MyLocalModItem.xaml;Pages\PageDownload\Resource\MyResourceItem.xaml;Pages\PageDownload\Resource\PageResource.xaml;Pages\PageDownload\Resource\PageDownloadDataPack.xaml;Pages\PageDownload\Resource\PageDownloadPack.xaml;Pages\PageDownload\Resource\PageDownloadShader.xaml;Pages\PageDownload\Resource\PageDownloadResourcePack.xaml;Pages\PageDownload\Resource\PageDownloadMod.xaml;Pages\PageDownload\Resource\PageDownloadMcMod.xaml;Pages\PageDownload\PageDownloadInstall.xaml;Pages\PageDownload\PageDownloadJava.xaml;Pages\PageDownload\Resource\PageDownloadCompDetail.xaml;Pages\PageLaunch\MyMsgLogin.xaml;Pages\PageLaunch\PageLoginAuth.xaml;Pages\PageLaunch\PageLoginAuthSkin.xaml;Pages\PageLaunch\PageLoginMs.xaml;Pages\PageLaunch\PageLoginMsSkin.xaml;Pages\PageLaunch\PageLoginNideSkin.xaml;Pages\PageLink\PageLinkMain.xaml;Pages\PageOther\PageOtherHelpDetail.xaml;Pages\PageInstance\PageInstanceExport.xaml;Pages\PageOther\PageOtherTest.xaml;Pages\PageLaunch\MySkin.xaml;Pages\PageLaunch\PageLoginNide.xaml;Pages\PageLaunch\PageLoginLegacy.xaml;Pages\PageSelectRight.xaml;Pages\PageSelectLeft.xaml;Pages\PageLaunch\PageLaunchLeft.xaml;Pages\PageLaunch\PageLaunchRight.xaml;Pages\PageOther\PageOtherAbout.xaml;Pages\PageOther\PageOtherHelp.xaml;Pages\PageDownload\PageDownloadLeft.xaml;Pages\PageOther\PageOtherLeft.xaml;Pages\PageSetup\PageSetupLeft.xaml;Pages\PageSetup\PageSetupLaunch.xaml;Pages\PageSetup\PageSetupSystem.xaml;Pages\PageSetup\PageSetupLink.xaml;Pages\PageSetup\PageSetupUI.xaml;Pages\PageSetup\PageSetupAnim.xaml;Pages\PageSetup\PageSetupMemory.xaml;Pages\PageSetup\PageSetupJava.xaml;Pages\PageSetup\PageSetupMore.xaml;Pages\PageSetup\PageSetupShortcut.xaml;Pages\PageTool\PageToolLeft.xaml;Pages\PageTool\PageToolRecord.xaml;Pages\PageTool\PageToolScreenshot.xaml;Pages\PageTool\PageToolHud.xaml;Pages\PageSpeedLeft.xaml;Pages\PageSpeedRight.xaml;Pages\PageInstance\PageInstanceLeft.xaml;Pages\PageInstance\PageInstanceMod.xaml;Pages\PageInstance\PageInstanceModDisabled.xaml;Pages\PageInstance\PageInstanceOverall.xaml;Pages\PageInstance\PageInstanceSetup.xaml;
+
+False
+

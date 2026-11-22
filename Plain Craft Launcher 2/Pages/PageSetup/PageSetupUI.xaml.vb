@@ -1,4 +1,4 @@
-﻿Public Class PageSetupUI
+Public Class PageSetupUI
 
     Private Sub PageSetupUI_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
         '重复加载部分
@@ -1310,10 +1310,6 @@ Refresh:
         Static Hooked As Boolean = False
         LabButtonCorner.Text = Settings.Get(Of Integer)("UltraButtonCorner") & " px"
         LabWindowCorner.Text = Settings.Get(Of Integer)("UltraWindowCorner") & " px"
-        Dim BtnH = Settings.Get(Of Integer)("UltraButtonHeight")
-        Dim BtnW = Settings.Get(Of Integer)("UltraButtonWidth")
-        LabButtonHeight.Text = If(BtnH = 0, "自动", BtnH & " px")
-        LabButtonWidth.Text = If(BtnW = 0, "自动", BtnW & " px")
         If Hooked Then Return
         Hooked = True
         AddHandler SliderButtonCorner.Change, Sub(sender, user)
@@ -1322,26 +1318,6 @@ Refresh:
         AddHandler SliderWindowCorner.Change, Sub(sender, user)
                                                   LabWindowCorner.Text = SliderWindowCorner.Value & " px"
                                               End Sub
-        AddHandler SliderButtonHeight.Change, Sub(sender, user)
-                                                  LabButtonHeight.Text = If(SliderButtonHeight.Value = 0, "自动", SliderButtonHeight.Value & " px")
-                                              End Sub
-        AddHandler SliderButtonWidth.Change, Sub(sender, user)
-                                                  LabButtonWidth.Text = If(SliderButtonWidth.Value = 0, "自动", SliderButtonWidth.Value & " px")
-                                              End Sub
-        AddHandler BtnCornerReset.Click, Sub(sender, e) ResetCornerCard()
-    End Sub
-
-    '恢复圆角/按钮尺寸四项为默认值（滑块与标签同步）。
-    Private Sub ResetCornerCard()
-        SettingService.ResetSettings(CardCorner)   '递归重置卡片内所有带 SettingService.Key 的控件，并触发 UltraCorner.Refresh
-        SettingService.RefreshSettings(CardCorner) '把滑块显示同步回默认值
-        LabButtonCorner.Text = Settings.Get(Of Integer)("UltraButtonCorner") & " px"
-        LabWindowCorner.Text = Settings.Get(Of Integer)("UltraWindowCorner") & " px"
-        Dim BtnH = Settings.Get(Of Integer)("UltraButtonHeight")
-        Dim BtnW = Settings.Get(Of Integer)("UltraButtonWidth")
-        LabButtonHeight.Text = If(BtnH = 0, "自动", BtnH & " px")
-        LabButtonWidth.Text = If(BtnW = 0, "自动", BtnW & " px")
-        Hint("已恢复默认圆角与按钮尺寸")
     End Sub
 
 #End Region

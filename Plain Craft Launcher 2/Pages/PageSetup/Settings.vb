@@ -169,8 +169,6 @@ Public Class Settings
         New Setting("UltraResourceOutlineColors", ""), '分类描边配色：科技=3B82F6|魔法=8B5CF6|…
         New Setting("UltraButtonCorner", 3, OnChanged:=Sub() UltraCorner.Refresh()), '按钮圆角
         New Setting("UltraWindowCorner", 6, OnChanged:=Sub() UltraCorner.Refresh()), '窗口圆角
-        New Setting("UltraButtonHeight", 30, OnChanged:=Sub() UltraCorner.Refresh()), '按钮最小高度：0=不干预
-        New Setting("UltraButtonWidth", 0, OnChanged:=Sub() UltraCorner.Refresh()), '按钮最小宽度：0=不干预
         New Setting("SkinLastFile", ""),
         New Setting("SkinOrder", ""),
         New Setting("SkinLibSource", 0),

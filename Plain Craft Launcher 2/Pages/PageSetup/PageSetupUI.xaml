@@ -36,10 +36,9 @@
                     <local:MyButton x:Name="BtnOutlineReset" Text="恢复默认配色" Height="30" HorizontalAlignment="Left" Padding="14,5" />
                 </StackPanel>
             </local:MyCard>
-            <!-- Ultra 新增：圆角与按钮尺寸调节 -->
-            <local:MyCard x:Name="CardCorner" Margin="0,15" Title="圆角与按钮尺寸">
+            <!-- Ultra 新增：圆角调节 -->
+            <local:MyCard x:Name="CardCorner" Margin="0,15" Title="圆角">
                 <StackPanel Margin="25,40,25,20">
-                    <local:MyButton x:Name="BtnCornerReset" Text="恢复默认" Height="30" Padding="14,5" HorizontalAlignment="Left" Margin="0,0,0,16" />
                     <TextBlock Text="按钮圆角" FontSize="14" Margin="0,0,0,6" />
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -48,26 +47,6 @@
                         </Grid.ColumnDefinitions>
                         <local:MySlider x:Name="SliderButtonCorner" local:SettingService.Key="UltraButtonCorner" MaxValue="12" />
                         <TextBlock x:Name="LabButtonCorner" Grid.Column="1" VerticalAlignment="Center" Margin="14,0,0,0"
-                                   FontSize="12" Foreground="{DynamicResource ColorBrush3}" />
-                    </Grid>
-                    <TextBlock Text="按钮高度" FontSize="14" Margin="0,18,0,6" />
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="1*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <local:MySlider x:Name="SliderButtonHeight" local:SettingService.Key="UltraButtonHeight" MaxValue="60" />
-                        <TextBlock x:Name="LabButtonHeight" Grid.Column="1" VerticalAlignment="Center" Margin="14,0,0,0"
-                                   FontSize="12" Foreground="{DynamicResource ColorBrush3}" />
-                    </Grid>
-                    <TextBlock Text="按钮宽度" FontSize="14" Margin="0,18,0,6" />
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="1*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <local:MySlider x:Name="SliderButtonWidth" local:SettingService.Key="UltraButtonWidth" MaxValue="300" ValueByKey="10" />
-                        <TextBlock x:Name="LabButtonWidth" Grid.Column="1" VerticalAlignment="Center" Margin="14,0,0,0"
                                    FontSize="12" Foreground="{DynamicResource ColorBrush3}" />
                     </Grid>
                     <TextBlock Text="窗口圆角" FontSize="14" Margin="0,18,0,6" />
@@ -81,7 +60,7 @@
                                    FontSize="12" Foreground="{DynamicResource ColorBrush3}" />
                     </Grid>
                     <TextBlock Margin="0,14,0,0" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource ColorBrush3}"
-                               Text="按钮圆角/高度/宽度作用于全局按钮；窗口圆角作用于主窗口四角。&#xa;高度、宽度为 0 表示不干预（沿用各按钮原尺寸）。&#xa;拖动滑块即时生效。" />
+                               Text="按钮圆角作用于「启动」「下载」「搜索」等按钮；窗口圆角作用于主窗口四角。&#xa;拖动滑块即时生效。" />
                 </StackPanel>
             </local:MyCard>
             <!-- Ultra 新增：原版风格卡片 -->
